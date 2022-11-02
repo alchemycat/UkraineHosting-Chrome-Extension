@@ -1,5 +1,18 @@
 window.onload = () => {
-    async function init() {
+    async function initDelete() {
+        let accountId = document.getElementById('account_id');
+
+        if (accountId) {
+            accountId = accountId.value;
+        }
+
+        if (!accountId) {
+            alert('account id not found');
+            return;
+        }
+
+        window.location.href = `https://adm.tools/hosting/account/${id}/mail/boxes/`;
+
         //проверяем загрузился ли блок с почтами
         let table = document
             .querySelector('#boxes_list')
@@ -18,7 +31,12 @@ window.onload = () => {
             }
         }, 500);
 
-        async function deleteEmails() {
+        /**
+         * @param {String[]} emailsList - list of emails for delete
+         *
+         */
+
+        async function deleteEmails(emailsList) {
             //список почт для удаления
             let emails = [
                 'test1@abc.cashon.website',
@@ -83,7 +101,7 @@ window.onload = () => {
                     clearInterval(id);
                     resolve(element);
                 } else {
-                    console.log('cant find element');
+                    console.log('wait element');
                     element = document.querySelector(selector);
                 }
             }, 100);
@@ -101,7 +119,7 @@ window.onload = () => {
                     console.log('confirm closed');
                     resolve();
                 } else {
-                    console.log('wait while modal be closed');
+                    console.log('wait when modal be closed');
                     isVisible = document.querySelector(selector);
                 }
             });
@@ -114,5 +132,82 @@ window.onload = () => {
         });
     }
 
-    init();
+    // init();
+
+    function initDNS(subdomain) {
+        // (?<=\.).* //regexp get domain from subdomain
+        //https://adm.tools/domains/
+
+        const domain = subdomain.match(/(?<=\.).*/gm)[0];
+
+        console.log(domain);
+
+        //проверяем загрузился ли блок с почтами
+        let table = document
+            .querySelector('#content_domain')
+            .querySelector('.table');
+
+        let id = setInterval(() => {
+            if (table) {
+                clearInterval(id);
+                console.log(table);
+                //если блок с почтами загрузился тогда запускаем функцию для удаления почт
+                findDomain();
+            } else {
+                table = document
+                    .querySelector('#content_domain')
+                    .querySelector('.table');
+            }
+        }, 500);
+
+        //(?<=\(\')\d+(?=') parse domain id
+
+        function findDomain() {
+            let links = document.querySelectorAll(
+                '[onclick*="domain_delete_fake"]'
+            );
+
+            links.forEach((link) => {
+                if (link.getAttribute('onclick').includes(domain)) {
+                    //поиск ID домена
+                    let urlID = link
+                        .getAttribute('onclick')
+                        .match(/(?<=\(\')\d+(?=')/gm)[0];
+
+                    //находим id домена и загружаем страницу
+                    window.location.href = `https://adm.tools/Domains/${urlID}/Manage/Records/`;
+                    return;
+                }
+            });
+        }
+
+        // window.location.href = 'https://adm.tools/domains/';
+    }
+
+    initDNS('abc.cashon.website');
+    // chrome.runtime.onMessage.addListener((request) => {
+    //     console.log(request);
+    // });
+
+    //Функція дістає дані з chrome.storage
+    function getStorageData(sKey) {
+        return new Promise(function (resolve, reject) {
+            chrome.storage.local.get(sKey, function (item) {
+                if (chrome.runtime.lastError) {
+                    console.error(chrome.runtime.lastError.message);
+                    if (chrome.runtime.lastError) {
+                        reject(chrome.runtime.lastError.message);
+                    }
+                } else {
+                    resolve(item);
+                }
+            });
+        });
+    }
+
+    // async function main() {
+    //     const status = await getStorageData('status');
+    //     console.log(status);
+    // }
+    // main();
 };

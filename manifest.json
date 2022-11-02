@@ -18,6 +18,6 @@
     "background": {
         "service_worker": "background.js"
     },
-    "permissions": ["tabs", "scripting"],
+    "permissions": ["tabs", "storage"],
     "host_permissions": ["*://adm.tools/*"]
 }
