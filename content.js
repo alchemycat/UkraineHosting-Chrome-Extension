@@ -93,6 +93,7 @@ window.onload = () => {
     }
 
     function findElement(selector) {
+        //поиск элемента на странице
         return new Promise((resolve) => {
             let element = document.querySelector(selector);
             // console.log(selector);
@@ -110,6 +111,7 @@ window.onload = () => {
 
     function isClosed(selector) {
         // #confirm_modal
+        //проверяем закрылось ли модальное окно подтверждения удаления записи
         return new Promise((resolve) => {
             let isVisible = document.querySelector(selector);
 
@@ -179,6 +181,40 @@ window.onload = () => {
                     return;
                 }
             });
+        }
+
+        //функция для удаления DNS записей
+        async function removeDNS(subdomain) {
+            let btns = document.querySelectorAll(
+                '[onclick*="return domain_record_delete"]'
+            );
+
+            for (let btn of btns) {
+                let btnData = btn
+                    .getAttribute('onclick')
+                    .match(/(?<=')\S+(?='\))/gm)[0]
+                    .replaceAll(/<[^>]*>/gm, '');
+
+                //проверяем содержит ли значение кнопки нужный поддомен, если содержит нужно нажать на кнопку и удалить эту DNS
+                if (btnData.includes(subdomain)) {
+                    console.log('btn includes subdomain');
+                    await btn.click();
+                    await sleep(200);
+                    let deleteBtn = await findElement('.submit-btn');
+                    await sleep(300);
+                    console.log('click delete');
+                    await deleteBtn.click();
+                    await sleep(500);
+                    await isClosed('#confirm_modal');
+                } else {
+                    console.log('continue');
+                    continue;
+                }
+
+                console.log('sleep 300 ms');
+                await sleep(300);
+                console.log('awake');
+            }
         }
 
         // window.location.href = 'https://adm.tools/domains/';
