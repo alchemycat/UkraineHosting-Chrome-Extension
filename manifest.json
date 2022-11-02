@@ -1,0 +1,23 @@
+{
+    "name": "Ukraine Hosting Tool",
+    "version": "1.0.0",
+    "description": "Tool for Ukraine Hosting",
+    "manifest_version": 3,
+    "action": {
+        "default_popup": "./public/index.html",
+        "default_title": "Ukraine Hosting Tool"
+    },
+    "content_scripts": [
+        {
+            "matches": ["*://adm.tools/*"],
+            "js": ["content.js"],
+            "all_frames": true,
+            "run_at": "document_end"
+        }
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "permissions": ["tabs", "scripting"],
+    "host_permissions": ["*://adm.tools/*"]
+}
