@@ -36,7 +36,7 @@ window.onload = () => {
                 // });
             } else if (status.task === 'removedns') {
                 alert('dns start');
-                await searchTable('#records_control_table');
+                await searchTable('#domain_records_list');
                 await deleteDNSRecords('abc.cashon.website');
                 alert('dns complete');
                 //логика для сайта
