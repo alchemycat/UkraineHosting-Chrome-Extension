@@ -104,7 +104,6 @@ window.onload = () => {
                     // await isClosed('#confirm_modal');
                     // console.log(`site founded: ${btn}`);
                 }
-                console.log(storage);
             }
         } else {
             console.log('Сайты не найдены');
