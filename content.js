@@ -1,20 +1,29 @@
 window.onload = () => {
     async function init() {
-        //Константа
-        const accountId = 475465;
-
+        //Константы
+        const { accountid } = await getStorageData('accountid');
+        const { tasks } = await getStorageData('tasks');
         //Проверка статуса задачи и url
         let pageURL = window.location.href;
 
         //Получение статуса задачи и текущей задачи
         let { status } = await getStorageData('status');
-        console.log(status);
+
         if (status.process) {
+            if (!accountid) {
+                alert(
+                    'Введите accountId, без него расширение не может работать'
+                );
+                return;
+            } else {
+                alert(`account id: ${accountid}`);
+            }
             if (status.task === 'removeemail') {
                 alert('email start');
                 //логика для emails
                 await searchTable('#boxes_list');
-                await deleteEmails();
+                //передаем список эмейлов из первого массива (после выполнения задания, первый элемент массива будет удален)
+                await deleteEmails(tasks[0].emails);
                 alert('email complete');
                 //запускаем поиск url для удаления DNS
                 chrome.runtime.sendMessage({
@@ -25,25 +34,30 @@ window.onload = () => {
                 alert('find url start');
                 if (pageURL === 'https://adm.tools/domains/') {
                     await searchTable('#content_domain');
-                    let url = await findDomainID('cashon.website');
+                    //парсим домен из поддомена и передаем в функцию которая найдет ID домена и создаст URL
+                    const domain = tasks[0].subdomain.match(/(?<=\.).*/)[0];
+                    let url = await findDomainID(domain);
                     alert(`URL finded: ${url}`);
                     chrome.runtime.sendMessage({ type: 'removedns', url });
                 }
             } else if (status.task === 'removedns') {
                 alert('dns start');
                 await searchTable('#domain_records_list');
-                await deleteDNSRecords('abc.cashon.website');
+                //передаем поддомен в функцию для удаления DNS записей
+                await deleteDNSRecords(tasks[0].subdomain);
                 alert('dns complete');
                 chrome.runtime.sendMessage({
                     type: 'removesite',
-                    url: `https://adm.tools/hosting/account/${accountId}/virtual/`,
+                    url: `https://adm.tools/hosting/account/${accountid}/virtual/`,
                 });
                 //логика для сайта
             } else if (status.task === 'removesite') {
                 alert('site start');
                 await searchTable('#virtual_list');
-                await removeSites('abc.cashon.website');
+                //передаем поддомен в функцию которая удалит сайты
+                await removeSites(tasks[0].subdomain);
                 alert('site removed');
+                chrome.runtime.sendMessage({ type: 'stop' });
             }
         } else {
             console.log('Задача не активна');
@@ -96,14 +110,8 @@ window.onload = () => {
         });
     }
 
-    async function deleteEmails() {
+    async function deleteEmails(emails) {
         //список почт для удаления
-        let emails = [
-            'test1@abc.cashon.website',
-            'test2@abc.cashon.website',
-            'test3@abc.cashon.website',
-            'test4@abc.cashon.website',
-        ];
 
         //Находим все кнопки для удаления почт
         let btns = document.querySelectorAll(

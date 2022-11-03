@@ -1,13 +1,26 @@
 window.onload = () => {
     //значения хранилища
     async function init() {
-        const { tasks } = await getStorageData('tasks');
+        const { accountid } = await getStorageData('accountid');
+        let { tasks } = await getStorageData('tasks');
 
         if (!Array.isArray(tasks)) {
             chrome.storage.local.set({ tasks: [] });
         } else {
             addItems(tasks);
         }
+
+        //
+
+        const accountIdInput = document.querySelector('[name="accountid"]');
+
+        if (accountid) {
+            accountIdInput.value = accountid;
+        }
+
+        accountIdInput.addEventListener('input', () => {
+            chrome.storage.local.set({ accountid: accountIdInput.value });
+        });
 
         function addItems(tasks) {
             const list = document.querySelector('.main__list');
@@ -27,7 +40,7 @@ window.onload = () => {
         clearBtn.addEventListener('click', () => {
             const list = document.querySelector('.main__list');
 
-            chrome.storage.local.clear();
+            chrome.storage.local.remove('tasks');
 
             list.innerHTML = '';
         });
@@ -40,8 +53,11 @@ window.onload = () => {
 
             const emails = emailsInput.value.split('\n');
 
-            tasks.push({ subdomain: subdomain.value, emails });
+            if (tasks) {
+                tasks = [];
+            }
 
+            tasks.push({ subdomain: subdomain.value, emails });
             chrome.storage.local.set({
                 tasks,
             });
@@ -54,11 +70,15 @@ window.onload = () => {
 
         const btn = document.querySelector('.btn');
 
-        btn.addEventListener('click', () => {
-            chrome.runtime.sendMessage({
-                type: 'startBG',
-                url: 'https://adm.tools/hosting/account/475465/mail/boxes/',
-            });
+        btn.addEventListener('click', async () => {
+            let { tasks } = await getStorageData('tasks');
+
+            if (tasks.length > 0 && accountid) {
+                chrome.runtime.sendMessage({
+                    type: 'startBG',
+                    url: `https://adm.tools/hosting/account/${accountid}/mail/boxes/`,
+                });
+            }
         });
 
         function getStorageData(sKey) {
