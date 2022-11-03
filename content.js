@@ -11,16 +11,22 @@ window.onload = () => {
 
         if (status.process) {
             if (status.task === 'email') {
+                alert('email start');
                 //логика для emails
+                searchTable('#boxes_list', deleteEmails)
+                    .then(deleteEmails)
+                    .then(() => {
+                        alert('task complete');
+                    });
             } else if (status.task === 'dns') {
+                alert('dns start');
                 //логика для dns
                 //Вызываем функцию поиска таблицы, далее передаем коллбэк и параметры
-                // searchTable(
-                //     '#records_control_table',
-                //     deleteDNSRecords,
-                //     'abc.cashon.website'
-                // );
+                // searchTable('#records_control_table').then(() => {
+                //     deleteDNSRecords('abc.cashon.website');
+                // });
             } else {
+                alert('site start');
                 //логика для сайта
             }
         } else {
@@ -28,14 +34,13 @@ window.onload = () => {
         }
     }
 
-    function searchTable(selector, func, param) {
+    function searchTable(selector) {
         return new Promise((resolve) => {
             let table = document.querySelector(selector);
 
             let id = setInterval(() => {
                 if (table) {
                     clearInterval(id);
-                    func(param);
                     resolve();
                 } else {
                     table = document.querySelector(selector);
@@ -44,85 +49,57 @@ window.onload = () => {
         });
     }
 
-    async function emails() {
-        window.location.href = `https://adm.tools/hosting/account/${id}/mail/boxes/`;
+    async function deleteEmails(emailsList) {
+        //список почт для удаления
+        let emails = [
+            'test1@abc.cashon.website',
+            'test2@abc.cashon.website',
+            'test3@abc.cashon.website',
+            'test4@abc.cashon.website',
+        ];
 
-        //проверяем загрузился ли блок с почтами
-        let table = document
-            .querySelector('#boxes_list')
-            .querySelector('.table');
+        //Находим все кнопки для удаления почт
+        let btns = document.querySelectorAll(
+            '[onclick*="MailboxHandler.mailboxDelete"]'
+        );
 
-        let id = setInterval(() => {
-            if (table) {
-                clearInterval(id);
-                console.log(table);
-                //если блок с почтами загрузился тогда запускаем функцию для удаления почт
-                deleteEmails();
-            } else {
-                table = document
-                    .querySelector('#boxes_list')
-                    .querySelector('.table');
+        //начинаем цикл с перебором каждой кнопки
+        for (let btn of btns) {
+            let email;
+
+            email = btn
+                .getAttribute('onclick')
+                .match(/(?<=\,\s')\S+\@\S+(?=')/gm)[0];
+            //получаем email для текущей кнопки если он есть
+
+            if (!email) {
+                //если email не найден тогда пропускаем кнопку
+                console.log('continue');
+                continue;
             }
-        }, 500);
 
-        /**
-         * @param {String[]} emailsList - list of emails for delete
-         *
-         */
-
-        async function deleteEmails(emailsList) {
-            //список почт для удаления
-            let emails = [
-                'test1@abc.cashon.website',
-                'test2@abc.cashon.website',
-                'test3@abc.cashon.website',
-                'test4@abc.cashon.website',
-            ];
-
-            //Находим все кнопки для удаления почт
-            let btns = document.querySelectorAll(
-                '[onclick*="MailboxHandler.mailboxDelete"]'
-            );
-
-            //начинаем цикл с перебором каждой кнопки
-            for (let btn of btns) {
-                let email;
-
-                try {
-                    email = btn
-                        .getAttribute('onclick')
-                        .match(/(?<=\,\s')\S+\@\S+(?=')/gm)[0];
-                    //получаем email для текущей кнопки если он есть
-
-                    if (!email) {
-                        //если email не найден тогда пропускаем кнопку
-                        console.log('continue');
-                        continue;
-                    }
-                } catch (err) {
-                    //если ошибка выводим её и переход к следующей итерации
-                    console.log(err);
-                    continue;
-                }
-
-                if (emails.includes(email)) {
-                    console.log(`emails includes email: ${email}`);
-                    await btn.click();
-                    await sleep(200);
-                    let deleteBtn = await findElement('.submit-btn');
-                    await sleep(300);
-                    console.log('click delete');
-                    await deleteBtn.click();
-                    await sleep(500);
-                    await isClosed('#confirm_modal');
-                } else {
-                    console.log('continue');
-                    continue;
-                }
-                console.log('sleep 300 ms');
+            if (emails.includes(email)) {
+                //Начинаем удаление
+                console.log(`emails includes email: ${email}`);
+                //Жмём удалить email
+                await btn.click();
+                await sleep(200);
+                //Ждем пока появится кнопка подтверждения удаления
+                let deleteBtn = await findElement('.submit-btn');
                 await sleep(300);
-                console.log('awake');
+                console.log('click delete');
+                //Подтверждаем удаление
+                await deleteBtn.click();
+                await sleep(500);
+                //Проверяем закрылось ли модальное окно подтверждения удаления
+                await isClosed('#confirm_modal');
+            } else {
+                console.log('continue');
+                continue;
             }
+            console.log('sleep 300 ms');
+            await sleep(300);
+            console.log('awake');
         }
     }
 
@@ -278,10 +255,4 @@ window.onload = () => {
             console.log('awake');
         }
     }
-
-    // async function main() {
-    //     const status = await getStorageData('status');
-    //     console.log(status);
-    // }
-    // main();
 };
