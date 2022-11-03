@@ -16,47 +16,47 @@ window.onload = () => {
                 );
                 return;
             } else {
-                alert(`account id: ${accountid}`);
+                // alert(`account id: ${accountid}`);
             }
             if (status.task === 'removeemail') {
-                alert('email start');
+                // alert('email start');
                 //логика для emails
                 await searchTable('#boxes_list');
                 //передаем список эмейлов из первого массива (после выполнения задания, первый элемент массива будет удален)
-                await deleteEmails(tasks[0].emails);
-                alert('email complete');
+                await removeEmails(tasks[0].emails);
+                // alert('email complete');
                 //запускаем поиск url для удаления DNS
                 chrome.runtime.sendMessage({
                     type: 'findurl',
                     url: 'https://adm.tools/domains/',
                 });
             } else if (status.task === 'findurl') {
-                alert('find url start');
+                // alert('find url start');
                 if (pageURL === 'https://adm.tools/domains/') {
                     await searchTable('#content_domain');
                     //парсим домен из поддомена и передаем в функцию которая найдет ID домена и создаст URL
                     const domain = tasks[0].subdomain.match(/(?<=\.).*/)[0];
                     let url = await findDomainID(domain);
-                    alert(`URL finded: ${url}`);
+                    // alert(`URL finded: ${url}`);
                     chrome.runtime.sendMessage({ type: 'removedns', url });
                 }
             } else if (status.task === 'removedns') {
-                alert('dns start');
+                // alert('dns start');
                 await searchTable('#domain_records_list');
                 //передаем поддомен в функцию для удаления DNS записей
-                await deleteDNSRecords(tasks[0].subdomain);
-                alert('dns complete');
+                await removeDNSRecords(tasks[0].subdomain);
+                // alert('dns complete');
                 chrome.runtime.sendMessage({
                     type: 'removesite',
                     url: `https://adm.tools/hosting/account/${accountid}/virtual/`,
                 });
                 //логика для сайта
             } else if (status.task === 'removesite') {
-                alert('site start');
+                // alert('site start');
                 await searchTable('#virtual_list');
                 //передаем поддомен в функцию которая удалит сайты
                 await removeSites(tasks[0].subdomain);
-                alert('site removed');
+                // alert('site removed');
                 chrome.runtime.sendMessage({ type: 'stop' });
             }
         } else {
@@ -73,18 +73,19 @@ window.onload = () => {
             if (name.includes(domain)) {
                 //Жмём удалить site
                 const btn = site.querySelector('.c-site-item__delete');
-                // await btn.click();
+                await btn.click();
                 await sleep(200);
                 //Ждем пока появится кнопка подтверждения удаления
-                // let deleteBtn = await findElement('.submit-btn');
+                let deleteBtn = await findElement('#delete_hosts_submit');
+                // delete_hosts_submit
                 await sleep(300);
                 console.log('click delete');
                 //Подтверждаем удаление
-                // await deleteBtn.click();
+                await deleteBtn.click();
                 await sleep(500);
                 //Проверяем закрылось ли модальное окно подтверждения удаления
                 // await isClosed('#confirm_modal');
-                console.log(`site founded: ${btn}`);
+                // console.log(`site founded: ${btn}`);
             }
         }
     }
@@ -110,7 +111,7 @@ window.onload = () => {
         });
     }
 
-    async function deleteEmails(emails) {
+    async function removeEmails(emails) {
         //список почт для удаления
 
         //Находим все кнопки для удаления почт
@@ -163,6 +164,7 @@ window.onload = () => {
     function findElement(selector) {
         //поиск элемента на странице
         return new Promise((resolve) => {
+            let counter = 0;
             let element = document.querySelector(selector);
             // console.log(selector);
             let id = setInterval(() => {
@@ -170,8 +172,14 @@ window.onload = () => {
                     clearInterval(id);
                     resolve(element);
                 } else {
-                    console.log('wait element');
-                    element = document.querySelector(selector);
+                    if (counter < 100) {
+                        console.log('Ожидаю появление элемента');
+                        element = document.querySelector(selector);
+                        counter++;
+                    } else {
+                        clearInterval(id);
+                        console.log('Не удалось найти элемент на странице');
+                    }
                 }
             }, 100);
         });
@@ -244,7 +252,7 @@ window.onload = () => {
         });
     }
 
-    async function deleteDNSRecords(subdomain) {
+    async function removeDNSRecords(subdomain) {
         let btns = document.querySelectorAll(
             '[onclick*="return domain_record_delete"]'
         );
@@ -260,15 +268,15 @@ window.onload = () => {
             //проверяем содержит ли значение кнопки нужный поддомен, если содержит нужно нажать на кнопку и удалить эту DNS
             if (btnData.includes(subdomain)) {
                 console.log('btn includes subdomain');
-                // await btn.click();
+                await btn.click();
                 console.log(btn);
                 await sleep(200);
-                // let deleteBtn = await findElement('.submit-btn');
+                let deleteBtn = await findElement('.submit-btn');
                 await sleep(300);
                 console.log('click delete');
-                // await deleteBtn.click();
+                await deleteBtn.click();
                 await sleep(500);
-                // await isClosed('#confirm_modal');
+                await isClosed('#confirm_modal');
             } else {
                 console.log('continue');
                 continue;

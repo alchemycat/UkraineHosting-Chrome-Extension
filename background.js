@@ -37,6 +37,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender) {
         loadPage(request.url);
     } else if (request.type === 'stop') {
         let { tasks } = await getStorageData('tasks');
+        chrome.storage.local.set({
+            status: {
+                task: 'stop',
+                process: false,
+            },
+        });
         console.log(tasks);
         tasks = tasks.splice(1);
         console.log(tasks);
