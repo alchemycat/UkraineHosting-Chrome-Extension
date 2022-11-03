@@ -13,8 +13,10 @@ window.onload = () => {
             btn.setAttribute('disabled', true);
         } else {
             //Добавляем задания в список
-            if (!status.process) {
-                btn.removeAttribute('disabled', true);
+            if (status) {
+                if (!status.process) {
+                    btn.removeAttribute('disabled', true);
+                }
             }
             addItems(tasks);
         }
