@@ -10,7 +10,7 @@ window.onload = () => {
         let { status } = await getStorageData('status');
         console.log(status);
         if (status.process) {
-            if (status.task === 'email') {
+            if (status.task === 'removeemail') {
                 alert('email start');
                 //логика для emails
                 await searchTable('#boxes_list');
@@ -29,20 +29,49 @@ window.onload = () => {
                     alert(`URL finded: ${url}`);
                     chrome.runtime.sendMessage({ type: 'removedns', url });
                 }
-                //логика для dns
-                //Вызываем функцию поиска таблицы, далее передаем коллбэк и параметры
-                // searchTable('#records_control_table').then(() => {
-                //     deleteDNSRecords('abc.cashon.website');
-                // });
             } else if (status.task === 'removedns') {
                 alert('dns start');
                 await searchTable('#domain_records_list');
                 await deleteDNSRecords('abc.cashon.website');
                 alert('dns complete');
+                chrome.runtime.sendMessage({
+                    type: 'removesite',
+                    url: `https://adm.tools/hosting/account/${accountId}/virtual/`,
+                });
                 //логика для сайта
+            } else if (status.task === 'removesite') {
+                alert('site start');
+                await searchTable('#virtual_list');
+                await removeSites('abc.cashon.website');
+                alert('site removed');
             }
         } else {
             console.log('Задача не активна');
+        }
+    }
+
+    async function removeSites(domain) {
+        const sites = document.querySelectorAll('.c-site-item');
+
+        for (let site of sites) {
+            let name = site.querySelector('.c-site-item__site-name');
+            name = name.textContent.trim();
+            if (name.includes(domain)) {
+                //Жмём удалить site
+                const btn = site.querySelector('.c-site-item__delete');
+                // await btn.click();
+                await sleep(200);
+                //Ждем пока появится кнопка подтверждения удаления
+                // let deleteBtn = await findElement('.submit-btn');
+                await sleep(300);
+                console.log('click delete');
+                //Подтверждаем удаление
+                // await deleteBtn.click();
+                await sleep(500);
+                //Проверяем закрылось ли модальное окно подтверждения удаления
+                // await isClosed('#confirm_modal');
+                console.log(`site founded: ${btn}`);
+            }
         }
     }
 

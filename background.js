@@ -2,16 +2,12 @@ chrome.runtime.onMessage.addListener(function (request, sender) {
     if (request.type === 'startBG') {
         chrome.storage.local.set({
             status: {
-                task: 'email',
+                task: 'removeemail',
                 process: true,
             },
         });
 
-        //load page
-        chrome.tabs.query({ active: true }, (tabs) => {
-            chrome.tabs.update(tabs[0].id, { url: request.url });
-        });
-        // chrome.storage.local.clear();
+        loadPage(request.url);
     } else if (request.type === 'findurl') {
         chrome.storage.local.set({
             status: {
@@ -20,10 +16,7 @@ chrome.runtime.onMessage.addListener(function (request, sender) {
             },
         });
 
-        //load page for
-        chrome.tabs.query({ active: true }, (tabs) => {
-            chrome.tabs.update(tabs[0].id, { url: request.url });
-        });
+        loadPage(request.url);
     } else if (request.type === 'removedns') {
         chrome.storage.local.set({
             status: {
@@ -32,9 +25,24 @@ chrome.runtime.onMessage.addListener(function (request, sender) {
             },
         });
 
+        loadPage(request.url);
+    } else if (request.type === 'removesite') {
+        chrome.storage.local.set({
+            status: {
+                task: 'removesite',
+                process: true,
+            },
+        });
+
+        loadPage(request.url);
+    } else if (request.type === 'stop') {
+        console.log('all task complete');
+    }
+
+    function loadPage(url) {
         //load page for
         chrome.tabs.query({ active: true }, (tabs) => {
-            chrome.tabs.update(tabs[0].id, { url: request.url });
+            chrome.tabs.update(tabs[0].id, { url });
         });
     }
 });
