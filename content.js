@@ -7,17 +7,15 @@ window.onload = () => {
         let pageURL = window.location.href;
 
         //Получение статуса задачи и текущей задачи
-        let status = await getStorageData('status');
-
+        let { status } = await getStorageData('status');
+        console.log(status);
         if (status.process) {
             if (status.task === 'email') {
                 alert('email start');
                 //логика для emails
-                searchTable('#boxes_list', deleteEmails)
-                    .then(deleteEmails)
-                    .then(() => {
-                        alert('task complete');
-                    });
+                await searchTable('#boxes_list');
+                await deleteEmails();
+                alert('task complete');
             } else if (status.task === 'dns') {
                 alert('dns start');
                 //логика для dns
@@ -36,20 +34,26 @@ window.onload = () => {
 
     function searchTable(selector) {
         return new Promise((resolve) => {
-            let table = document.querySelector(selector);
-
+            let table = document
+                .querySelector(selector)
+                .querySelector('.table');
+            console.log(table);
             let id = setInterval(() => {
                 if (table) {
                     clearInterval(id);
+
                     resolve();
                 } else {
-                    table = document.querySelector(selector);
+                    console.log('поиск таблицы');
+                    table = document
+                        .querySelector(selector)
+                        .querySelector('.table');
                 }
             }, 100);
         });
     }
 
-    async function deleteEmails(emailsList) {
+    async function deleteEmails() {
         //список почт для удаления
         let emails = [
             'test1@abc.cashon.website',
@@ -102,6 +106,8 @@ window.onload = () => {
             console.log('awake');
         }
     }
+
+    init();
 
     function findElement(selector) {
         //поиск элемента на странице
