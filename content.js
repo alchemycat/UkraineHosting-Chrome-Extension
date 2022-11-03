@@ -15,16 +15,30 @@ window.onload = () => {
                 //логика для emails
                 await searchTable('#boxes_list');
                 await deleteEmails();
-                alert('task complete');
-            } else if (status.task === 'dns') {
-                alert('dns start');
+                alert('email complete');
+                //запускаем поиск url для удаления DNS
+                chrome.runtime.sendMessage({
+                    type: 'findurl',
+                    url: 'https://adm.tools/domains/',
+                });
+            } else if (status.task === 'findurl') {
+                alert('find url start');
+                if (pageURL === 'https://adm.tools/domains/') {
+                    await searchTable('#content_domain');
+                    let url = await findDomainID('cashon.website');
+                    alert(`URL finded: ${url}`);
+                    chrome.runtime.sendMessage({ type: 'removedns', url });
+                }
                 //логика для dns
                 //Вызываем функцию поиска таблицы, далее передаем коллбэк и параметры
                 // searchTable('#records_control_table').then(() => {
                 //     deleteDNSRecords('abc.cashon.website');
                 // });
-            } else {
-                alert('site start');
+            } else if (status.task === 'removedns') {
+                alert('dns start');
+                await searchTable('#records_control_table');
+                await deleteDNSRecords('abc.cashon.website');
+                alert('dns complete');
                 //логика для сайта
             }
         } else {
@@ -151,41 +165,11 @@ window.onload = () => {
         });
     }
 
-    // init();
+    //функция поиска ID домена
+    async function findDomainID(domain) {
+        return new Promise((resolve) => {
+            let url;
 
-    function initDNS(subdomain) {
-        // (?<=\.).* //regexp get domain from subdomain
-        //https://adm.tools/domains/
-
-        const domain = subdomain.match(/(?<=\.).*/gm)[0];
-
-        console.log(domain);
-
-        //проверяем загрузился ли блок с почтами
-        let table = document
-            .querySelector('#content_domain')
-            .querySelector('.table');
-
-        let id = setInterval(() => {
-            if (table) {
-                clearInterval(id);
-                console.log(table);
-                //если блок с почтами загрузился тогда запускаем функцию для удаления почт
-                // findDomain();
-                removeDNS(subdomain);
-            } else {
-                table = document
-                    .querySelector('#content_domain')
-                    .querySelector('.table');
-            }
-        }, 500);
-
-        //(?<=\(\')\d+(?=') parse domain id
-
-        // function findDomain() {}
-
-        //функция для удаления DNS записей
-        async function removeDNS(subdomain) {
             let links = document.querySelectorAll(
                 '[onclick*="domain_delete_fake"]'
             );
@@ -198,17 +182,14 @@ window.onload = () => {
                         .match(/(?<=\(\')\d+(?=')/gm)[0];
 
                     //находим id домена и загружаем страницу
-                    let url = `https://adm.tools/Domains/${urlID}/Manage/Records/`;
-                    chrome.runtime.sendMessage({ type: 'loadpage', url });
+                    url = `https://adm.tools/Domains/${urlID}/Manage/Records/`;
                     break;
                 }
             }
-        }
 
-        // window.location.href = 'https://adm.tools/domains/';
+            resolve(url);
+        });
     }
-
-    // initDNS('abc.cashon.website');
 
     //Функція дістає дані з chrome.storage
     function getStorageData(sKey) {

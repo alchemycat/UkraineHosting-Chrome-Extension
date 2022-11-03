@@ -6,12 +6,33 @@ chrome.runtime.onMessage.addListener(function (request, sender) {
                 process: true,
             },
         });
+
+        //load page
         chrome.tabs.query({ active: true }, (tabs) => {
             chrome.tabs.update(tabs[0].id, { url: request.url });
         });
         // chrome.storage.local.clear();
-        // chrome.storage.local.remove('dns');
-    } else if (request.type === 'loadpage') {
+    } else if (request.type === 'findurl') {
+        chrome.storage.local.set({
+            status: {
+                task: 'findurl',
+                process: true,
+            },
+        });
+
+        //load page for
+        chrome.tabs.query({ active: true }, (tabs) => {
+            chrome.tabs.update(tabs[0].id, { url: request.url });
+        });
+    } else if (request.type === 'removedns') {
+        chrome.storage.local.set({
+            status: {
+                task: 'removedns',
+                process: true,
+            },
+        });
+
+        //load page for
         chrome.tabs.query({ active: true }, (tabs) => {
             chrome.tabs.update(tabs[0].id, { url: request.url });
         });
