@@ -31,28 +31,6 @@ window.onload = () => {
         }
         //
 
-        //Слушаем сообщения
-        chrome.runtime.onMessage.addListener(async (request) => {
-            if (request.type === 'complete') {
-                const caption = document.querySelector('.caption');
-                let { tasks } = await getStorageData('tasks');
-
-                addItems(tasks);
-
-                if (tasks.length === 0) {
-                    if (!caption.classList.contains('hidden')) {
-                        caption.classList.add('hidden');
-                    }
-                } else {
-                    if (caption.classList.contains('hidden')) {
-                        caption.classList.remove('hidden');
-                    }
-                }
-            }
-        });
-
-        //
-
         const accountIdInput = document.querySelector('[name="accountid"]');
 
         if (accountid) {
