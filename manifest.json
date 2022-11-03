@@ -7,6 +7,9 @@
         "default_popup": "./public/index.html",
         "default_title": "Ukraine Hosting Tool"
     },
+    "icons": {
+        "128": "icon.png"
+    },
     "content_scripts": [
         {
             "matches": ["*://adm.tools/*"],

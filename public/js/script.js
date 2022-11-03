@@ -108,6 +108,7 @@ window.onload = () => {
             let { tasks } = await getStorageData('tasks');
 
             if (tasks.length > 0 && accountid) {
+                btn.setAttribute('disabled', true);
                 chrome.runtime.sendMessage({
                     type: 'startBG',
                     url: `https://adm.tools/hosting/account/${accountid}/mail/boxes/`,
