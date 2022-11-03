@@ -17,6 +17,7 @@ window.onload = () => {
             caption.classList.add('hidden');
         } else {
             //Добавляем задания в список
+            console.log(status);
             if (status) {
                 if (!status.process) {
                     btn.removeAttribute('disabled', true);
@@ -77,19 +78,36 @@ window.onload = () => {
 
         const clearBtn = document.querySelector('.button__clear');
 
-        clearBtn.addEventListener('click', () => {
+        clearBtn.addEventListener('click', async () => {
+            const caption = document.querySelector('.caption');
             const list = document.querySelector('.main__list');
+            const btnStart = document.querySelector('.btn__start');
+
+            if (!caption.classList.contains('hidden')) {
+                caption.classList.add('hidden');
+            }
 
             chrome.storage.local.remove('tasks');
 
+            const { tasks } = await getStorageData('tasks');
+
+            console.log(tasks);
+
             list.innerHTML = '';
+
+            if (!btnStart.getAttribute('disabled')) {
+                btnStart.setAttribute('disabled', true);
+            }
         });
 
         const mainBtn = document.querySelector('.button__add');
 
         mainBtn.addEventListener('click', async () => {
+            const btnStart = document.querySelector('.btn__start');
             const subdomain = document.querySelector('[name="subdomain"]');
             const emailsInput = document.querySelector('[name="emails"]');
+
+            let { tasks } = await getStorageData('tasks');
 
             const errors = [];
 
@@ -138,6 +156,11 @@ window.onload = () => {
                 }
 
                 addItems(tasks);
+
+                if (btnStart.getAttribute('disabled')) {
+                    btn.removeAttribute('disabled');
+                }
+
                 subdomain.value = '';
                 emailsInput.value = '';
             }
