@@ -14,6 +14,7 @@ window.onload = () => {
                 alert(
                     'Введите accountId, без него расширение не может работать'
                 );
+                chrome.runtime.sendMessage({ type: 'stop' });
                 return;
             } else {
                 // alert(`account id: ${accountid}`);
@@ -57,6 +58,7 @@ window.onload = () => {
                 //передаем поддомен в функцию которая удалит сайты
                 await removeSites(tasks[0].subdomain);
                 // alert('site removed');
+                console.log('Завершаю работу');
                 chrome.runtime.sendMessage({ type: 'stop' });
             }
         } else {
@@ -66,32 +68,41 @@ window.onload = () => {
 
     async function removeSites(domain) {
         const sites = document.querySelectorAll('.c-site-item');
+        // const storage = await getStorageData('status');
+        // console.log(storage);
+        if (sites.length > 0) {
+            for (let site of sites) {
+                let name = site.querySelector('.c-site-item__site-name');
+                name = name.textContent.trim();
+                if (name.includes(domain)) {
+                    console.log('ищу нужный домен');
+                    //Жмём удалить site
 
-        for (let site of sites) {
-            let name = site.querySelector('.c-site-item__site-name');
-            name = name.textContent.trim();
-            if (name.includes(domain)) {
-                //Жмём удалить site
-                const btn = site.querySelector('.c-site-item__delete');
-                await btn.click();
-                await sleep(200);
-                //Ждем пока появится кнопка подтверждения удаления
-                let deleteBtn = await findElement('#delete_hosts_submit');
-                // delete_hosts_submit
-                await sleep(300);
-                console.log('click delete');
-                //Подтверждаем удаление
-                await deleteBtn.click();
-                await sleep(500);
-                //Проверяем закрылось ли модальное окно подтверждения удаления
-                // await isClosed('#confirm_modal');
-                // console.log(`site founded: ${btn}`);
+                    const btn = site.querySelector('.c-site-item__delete');
+                    await btn.click();
+                    await sleep(200);
+                    //Ждем пока появится кнопка подтверждения удаления
+                    let deleteBtn = await findElement('#delete_hosts_submit');
+                    // delete_hosts_submit
+                    await sleep(300);
+                    console.log('click delete');
+                    //Подтверждаем удаление
+                    await deleteBtn.click();
+                    await sleep(500);
+                    //Проверяем закрылось ли модальное окно подтверждения удаления
+                    // await isClosed('#confirm_modal');
+                    // console.log(`site founded: ${btn}`);
+                }
+                console.log(storage);
             }
+        } else {
+            console.log('Сайты не найдены');
         }
     }
 
     function searchTable(selector) {
         return new Promise((resolve) => {
+            let counter = 0;
             let table = document
                 .querySelector(selector)
                 .querySelector('.table');
@@ -106,6 +117,12 @@ window.onload = () => {
                     table = document
                         .querySelector(selector)
                         .querySelector('.table');
+                    counter++;
+                    if (counter > 100) {
+                        clearInterval(id);
+                        console.log('Не удалось найти элемент на странице');
+                        chrome.runtime.sendMessage({ type: 'stop' });
+                    }
                 }
             }, 100);
         });
@@ -172,13 +189,13 @@ window.onload = () => {
                     clearInterval(id);
                     resolve(element);
                 } else {
-                    if (counter < 100) {
-                        console.log('Ожидаю появление элемента');
-                        element = document.querySelector(selector);
-                        counter++;
-                    } else {
+                    console.log('Ожидаю появление элемента');
+                    element = document.querySelector(selector);
+                    counter++;
+                    if (counter > 100) {
                         clearInterval(id);
                         console.log('Не удалось найти элемент на странице');
+                        chrome.runtime.sendMessage({ type: 'stop' });
                     }
                 }
             }, 100);
@@ -194,10 +211,10 @@ window.onload = () => {
             let confirmId = setInterval(() => {
                 if (isVisible.classList.contains('hidden')) {
                     clearInterval(confirmId);
-                    console.log('confirm closed');
+                    console.log('Модальное окно закрыто, можно продолжать');
                     resolve();
                 } else {
-                    console.log('wait when modal be closed');
+                    console.log('Ожидаю закрытие модального окна');
                     isVisible = document.querySelector(selector);
                 }
             });

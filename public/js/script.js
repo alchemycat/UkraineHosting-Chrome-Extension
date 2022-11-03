@@ -68,7 +68,7 @@ window.onload = () => {
             emailsInput.value = '';
         });
 
-        const btn = document.querySelector('.btn');
+        const btn = document.querySelector('.btn__start');
 
         btn.addEventListener('click', async () => {
             let { tasks } = await getStorageData('tasks');

@@ -1,3 +1,25 @@
+.main {
+    /* padding: 20px; */
+    padding: 20px 0px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
 .main__field {
     margin-top: 10px;
+}
+
+.button__add {
+    margin-right: 10px;
+}
+
+input {
+    width: 100%;
+}
+
+textarea {
+    width: 100%;
 }
