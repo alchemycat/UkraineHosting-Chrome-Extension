@@ -3,7 +3,7 @@ window.onload = () => {
 
     btn.addEventListener('click', () => {
         chrome.runtime.sendMessage({
-            type: 'dns',
+            type: 'startBG',
             url: 'https://adm.tools/domains/',
         });
     });

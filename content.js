@@ -1,16 +1,50 @@
 window.onload = () => {
-    async function initDelete() {
-        let accountId = document.getElementById('account_id');
+    async function init() {
+        //Константа
+        const accountId = 475465;
 
-        if (accountId) {
-            accountId = accountId.value;
+        //Проверка статуса задачи и url
+        let pageURL = window.location.href;
+
+        //Получение статуса задачи и текущей задачи
+        let status = await getStorageData('status');
+
+        if (status.process) {
+            if (status.task === 'email') {
+                //логика для emails
+            } else if (status.task === 'dns') {
+                //логика для dns
+                //Вызываем функцию поиска таблицы, далее передаем коллбэк и параметры
+                // searchTable(
+                //     '#records_control_table',
+                //     deleteDNSRecords,
+                //     'abc.cashon.website'
+                // );
+            } else {
+                //логика для сайта
+            }
+        } else {
+            console.log('Задача не активна');
         }
+    }
 
-        if (!accountId) {
-            alert('account id not found');
-            return;
-        }
+    function searchTable(selector, func, param) {
+        return new Promise((resolve) => {
+            let table = document.querySelector(selector);
 
+            let id = setInterval(() => {
+                if (table) {
+                    clearInterval(id);
+                    func(param);
+                    resolve();
+                } else {
+                    table = document.querySelector(selector);
+                }
+            }, 100);
+        });
+    }
+
+    async function emails() {
         window.location.href = `https://adm.tools/hosting/account/${id}/mail/boxes/`;
 
         //проверяем загрузился ли блок с почтами
@@ -154,7 +188,8 @@ window.onload = () => {
                 clearInterval(id);
                 console.log(table);
                 //если блок с почтами загрузился тогда запускаем функцию для удаления почт
-                findDomain();
+                // findDomain();
+                removeDNS(subdomain);
             } else {
                 table = document
                     .querySelector('#content_domain')
@@ -164,12 +199,15 @@ window.onload = () => {
 
         //(?<=\(\')\d+(?=') parse domain id
 
-        function findDomain() {
+        // function findDomain() {}
+
+        //функция для удаления DNS записей
+        async function removeDNS(subdomain) {
             let links = document.querySelectorAll(
                 '[onclick*="domain_delete_fake"]'
             );
 
-            links.forEach((link) => {
+            for (let link of links) {
                 if (link.getAttribute('onclick').includes(domain)) {
                     //поиск ID домена
                     let urlID = link
@@ -177,53 +215,17 @@ window.onload = () => {
                         .match(/(?<=\(\')\d+(?=')/gm)[0];
 
                     //находим id домена и загружаем страницу
-                    window.location.href = `https://adm.tools/Domains/${urlID}/Manage/Records/`;
-                    return;
+                    let url = `https://adm.tools/Domains/${urlID}/Manage/Records/`;
+                    chrome.runtime.sendMessage({ type: 'loadpage', url });
+                    break;
                 }
-            });
-        }
-
-        //функция для удаления DNS записей
-        async function removeDNS(subdomain) {
-            let btns = document.querySelectorAll(
-                '[onclick*="return domain_record_delete"]'
-            );
-
-            for (let btn of btns) {
-                let btnData = btn
-                    .getAttribute('onclick')
-                    .match(/(?<=')\S+(?='\))/gm)[0]
-                    .replaceAll(/<[^>]*>/gm, '');
-
-                //проверяем содержит ли значение кнопки нужный поддомен, если содержит нужно нажать на кнопку и удалить эту DNS
-                if (btnData.includes(subdomain)) {
-                    console.log('btn includes subdomain');
-                    await btn.click();
-                    await sleep(200);
-                    let deleteBtn = await findElement('.submit-btn');
-                    await sleep(300);
-                    console.log('click delete');
-                    await deleteBtn.click();
-                    await sleep(500);
-                    await isClosed('#confirm_modal');
-                } else {
-                    console.log('continue');
-                    continue;
-                }
-
-                console.log('sleep 300 ms');
-                await sleep(300);
-                console.log('awake');
             }
         }
 
         // window.location.href = 'https://adm.tools/domains/';
     }
 
-    initDNS('abc.cashon.website');
-    // chrome.runtime.onMessage.addListener((request) => {
-    //     console.log(request);
-    // });
+    // initDNS('abc.cashon.website');
 
     //Функція дістає дані з chrome.storage
     function getStorageData(sKey) {
@@ -239,6 +241,42 @@ window.onload = () => {
                 }
             });
         });
+    }
+
+    async function deleteDNSRecords(subdomain) {
+        let btns = document.querySelectorAll(
+            '[onclick*="return domain_record_delete"]'
+        );
+
+        console.log(btns);
+
+        for (let btn of btns) {
+            let btnData = btn
+                .getAttribute('onclick')
+                .match(/(?<=')\S+(?='\))/gm)[0]
+                .replaceAll(/<[^>]*>/gm, '');
+
+            //проверяем содержит ли значение кнопки нужный поддомен, если содержит нужно нажать на кнопку и удалить эту DNS
+            if (btnData.includes(subdomain)) {
+                console.log('btn includes subdomain');
+                // await btn.click();
+                console.log(btn);
+                await sleep(200);
+                // let deleteBtn = await findElement('.submit-btn');
+                await sleep(300);
+                console.log('click delete');
+                // await deleteBtn.click();
+                await sleep(500);
+                // await isClosed('#confirm_modal');
+            } else {
+                console.log('continue');
+                continue;
+            }
+
+            console.log('sleep 300 ms');
+            await sleep(300);
+            console.log('awake');
+        }
     }
 
     // async function main() {
