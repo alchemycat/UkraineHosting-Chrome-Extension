@@ -34,12 +34,17 @@ window.onload = () => {
             } else if (status.task === 'findurl') {
                 // alert('find url start');
                 if (pageURL === 'https://adm.tools/domains/') {
-                    await searchTable('#content_domain');
-                    //парсим домен из поддомена и передаем в функцию которая найдет ID домена и создаст URL
-                    const domain = tasks[0].subdomain.match(/(?<=\.).*/)[0];
-                    let url = await findDomainID(domain);
-                    // alert(`URL finded: ${url}`);
-                    chrome.runtime.sendMessage({ type: 'removedns', url });
+                    try {
+                        await searchTable('#content_domain');
+                        //парсим домен из поддомена и передаем в функцию которая найдет ID домена и создаст URL
+                        const domain = tasks[0].subdomain.match(/(?<=\.).*/)[0];
+                        let url = await findDomainID(domain);
+                        // alert(`URL finded: ${url}`);
+                        chrome.runtime.sendMessage({ type: 'removedns', url });
+                    } catch (err) {
+                        console.log(err);
+                        chrome.runtime.sendMessage({ type: 'stop' });
+                    }
                 }
             } else if (status.task === 'removedns') {
                 // alert('dns start');

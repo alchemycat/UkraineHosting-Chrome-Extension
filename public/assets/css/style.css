@@ -16,6 +16,10 @@
     margin-right: 10px;
 }
 
+.caption {
+    margin-bottom: 5px;
+}
+
 input {
     width: 100%;
 }

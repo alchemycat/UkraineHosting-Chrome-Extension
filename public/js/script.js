@@ -27,12 +27,12 @@ window.onload = () => {
 
             list.innerHTML = '';
 
-            for (let task of tasks) {
+            tasks.forEach((task, i) => {
                 const item = document.createElement('div');
                 item.classList.add('main__item');
-                item.textContent = task.subdomain;
+                item.textContent = `${i + 1}. ${task.subdomain}`;
                 list.append(item);
-            }
+            });
         }
 
         const clearBtn = document.querySelector('.button__clear');
@@ -53,7 +53,7 @@ window.onload = () => {
 
             const emails = emailsInput.value.split('\n');
 
-            if (tasks) {
+            if (!tasks) {
                 tasks = [];
             }
 
