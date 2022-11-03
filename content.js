@@ -9,65 +9,71 @@ window.onload = () => {
         //Получение статуса задачи и текущей задачи
         let { status } = await getStorageData('status');
 
-        if (status.process) {
-            if (!accountid) {
-                alert(
-                    'Введите accountId, без него расширение не может работать'
-                );
-                chrome.runtime.sendMessage({ type: 'stop' });
-                return;
-            } else {
-                // alert(`account id: ${accountid}`);
-            }
-            if (status.task === 'removeemail') {
-                // alert('email start');
-                //логика для emails
-                await searchTable('#boxes_list');
-                //передаем список эмейлов из первого массива (после выполнения задания, первый элемент массива будет удален)
-                await removeEmails(tasks[0].emails);
-                // alert('email complete');
-                //запускаем поиск url для удаления DNS
-                chrome.runtime.sendMessage({
-                    type: 'findurl',
-                    url: 'https://adm.tools/domains/',
-                });
-            } else if (status.task === 'findurl') {
-                // alert('find url start');
-                if (pageURL === 'https://adm.tools/domains/') {
-                    try {
-                        await searchTable('#content_domain');
-                        //парсим домен из поддомена и передаем в функцию которая найдет ID домена и создаст URL
-                        const domain = tasks[0].subdomain.match(/(?<=\.).*/)[0];
-                        let url = await findDomainID(domain);
-                        // alert(`URL finded: ${url}`);
-                        chrome.runtime.sendMessage({ type: 'removedns', url });
-                    } catch (err) {
-                        console.log(err);
-                        chrome.runtime.sendMessage({ type: 'stop' });
-                    }
+        if (status) {
+            if (status.process) {
+                if (!accountid) {
+                    alert(
+                        'Введите accountId, без него расширение не может работать'
+                    );
+                    chrome.runtime.sendMessage({ type: 'stop' });
+                    return;
+                } else {
+                    // alert(`account id: ${accountid}`);
                 }
-            } else if (status.task === 'removedns') {
-                // alert('dns start');
-                await searchTable('#domain_records_list');
-                //передаем поддомен в функцию для удаления DNS записей
-                await removeDNSRecords(tasks[0].subdomain);
-                // alert('dns complete');
-                chrome.runtime.sendMessage({
-                    type: 'removesite',
-                    url: `https://adm.tools/hosting/account/${accountid}/virtual/`,
-                });
-                //логика для сайта
-            } else if (status.task === 'removesite') {
-                // alert('site start');
-                await searchTable('#virtual_list');
-                //передаем поддомен в функцию которая удалит сайты
-                await removeSites(tasks[0].subdomain);
-                // alert('site removed');
-                console.log('Завершаю работу');
-                chrome.runtime.sendMessage({ type: 'stop' });
+                if (status.task === 'removeemail') {
+                    // alert('email start');
+                    //логика для emails
+                    await searchTable('#boxes_list');
+                    //передаем список эмейлов из первого массива (после выполнения задания, первый элемент массива будет удален)
+                    await removeEmails(tasks[0].emails);
+                    // alert('email complete');
+                    //запускаем поиск url для удаления DNS
+                    chrome.runtime.sendMessage({
+                        type: 'findurl',
+                        url: 'https://adm.tools/domains/',
+                    });
+                } else if (status.task === 'findurl') {
+                    // alert('find url start');
+                    if (pageURL === 'https://adm.tools/domains/') {
+                        try {
+                            await searchTable('#content_domain');
+                            //парсим домен из поддомена и передаем в функцию которая найдет ID домена и создаст URL
+                            const domain =
+                                tasks[0].subdomain.match(/(?<=\.).*/)[0];
+                            let url = await findDomainID(domain);
+                            // alert(`URL finded: ${url}`);
+                            chrome.runtime.sendMessage({
+                                type: 'removedns',
+                                url,
+                            });
+                        } catch (err) {
+                            console.log(err);
+                            chrome.runtime.sendMessage({ type: 'stop' });
+                        }
+                    }
+                } else if (status.task === 'removedns') {
+                    // alert('dns start');
+                    await searchTable('#domain_records_list');
+                    //передаем поддомен в функцию для удаления DNS записей
+                    await removeDNSRecords(tasks[0].subdomain);
+                    // alert('dns complete');
+                    chrome.runtime.sendMessage({
+                        type: 'removesite',
+                        url: `https://adm.tools/hosting/account/${accountid}/virtual/`,
+                    });
+                    //логика для сайта
+                } else if (status.task === 'removesite') {
+                    // alert('site start');
+                    await searchTable('#virtual_list');
+                    //передаем поддомен в функцию которая удалит сайты
+                    await removeSites(tasks[0].subdomain);
+                    // alert('site removed');
+                    console.log('Завершаю работу');
+                    chrome.runtime.sendMessage({ type: 'stop' });
+                }
+            } else {
+                console.log('Задача не активна');
             }
-        } else {
-            console.log('Задача не активна');
         }
     }
 
