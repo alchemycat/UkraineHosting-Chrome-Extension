@@ -36,6 +36,9 @@
                             type="text"
                             placeholder="Поддомен"
                             name="subdomain" />
+                        <div class="error hidden">
+                            Добавте правильный поддомен
+                        </div>
                     </div>
                     <div class="main__field">
                         <textarea
@@ -44,6 +47,9 @@
                             id="emails"
                             cols="30"
                             rows="5"></textarea>
+                        <div class="error hidden">
+                            Добавте эмейлы, каждый с новой строки
+                        </div>
                     </div>
                     <div class="main__field d-flex">
                         <button
@@ -51,7 +57,7 @@
                             Добавить данные
                         </button>
                         <button
-                            class="main__button button__clear btn btn-primary btn-sm">
+                            class="main__button button__clear btn btn-danger btn-sm">
                             Очистить список
                         </button>
                     </div>

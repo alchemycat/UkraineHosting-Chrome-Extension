@@ -1,15 +1,23 @@
 window.onload = () => {
     //значения хранилища
     async function init() {
+        //Константы
         const { accountid } = await getStorageData('accountid');
         let { tasks } = await getStorageData('tasks');
+        const { status } = await getStorageData('status');
+
+        const btn = document.querySelector('.btn__start');
 
         if (!Array.isArray(tasks)) {
             chrome.storage.local.set({ tasks: [] });
+            btn.setAttribute('disabled', true);
         } else {
+            //Добавляем задания в список
+            if (!status.process) {
+                btn.removeAttribute('disabled', true);
+            }
             addItems(tasks);
         }
-
         //
 
         const accountIdInput = document.querySelector('[name="accountid"]');
@@ -51,24 +59,50 @@ window.onload = () => {
             const subdomain = document.querySelector('[name="subdomain"]');
             const emailsInput = document.querySelector('[name="emails"]');
 
+            const errors = [];
+
             const emails = emailsInput.value.split('\n');
 
             if (!tasks) {
                 tasks = [];
             }
 
-            tasks.push({ subdomain: subdomain.value, emails });
-            chrome.storage.local.set({
-                tasks,
-            });
+            let subdomainError =
+                subdomain.parentElement.querySelector('.error');
 
-            addItems(tasks);
+            if (!subdomainError.classList.contains('hidden')) {
+                subdomainError.classList.add('hidden');
+            }
 
-            subdomain.value = '';
-            emailsInput.value = '';
+            if (!subdomain.value) {
+                subdomainError.classList.remove('hidden');
+                errors.push('subdomain');
+            }
+
+            let emailError = emailsInput.parentElement.querySelector('.error');
+
+            if (!emailError.classList.contains('hidden')) {
+                emailError.classList.add('hidden');
+            }
+
+            if (!emailsInput.value) {
+                emailError.classList.remove('hidden');
+                errors.push('emails');
+            }
+
+            if (errors.length > 0) {
+                return;
+            } else {
+                tasks.push({ subdomain: subdomain.value, emails });
+
+                chrome.storage.local.set({
+                    tasks,
+                });
+                addItems(tasks);
+                subdomain.value = '';
+                emailsInput.value = '';
+            }
         });
-
-        const btn = document.querySelector('.btn__start');
 
         btn.addEventListener('click', async () => {
             let { tasks } = await getStorageData('tasks');

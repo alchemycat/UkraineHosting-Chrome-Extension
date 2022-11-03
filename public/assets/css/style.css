@@ -20,10 +20,39 @@
     margin-bottom: 5px;
 }
 
+.error {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.input_error {
+    color: red;
+    border: 1px solid red;
+}
+
 input {
     width: 100%;
+    font-size: 14px;
+}
+
+input::placeholder {
+    font-size: 14px;
 }
 
 textarea {
     width: 100%;
+    font-size: 14px;
+}
+
+textarea::placeholder {
+    font-size: 14px;
+}
+
+.btn__start {
+    width: 100%;
+}
+
+.hidden {
+    display: none;
 }
