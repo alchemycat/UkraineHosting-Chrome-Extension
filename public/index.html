@@ -8,10 +8,50 @@
         <meta
             name="viewport"
             content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
+        <link
+            rel="stylesheet"
+            href="./assets/css/style.css" />
+        <title>Ukraine Hosting Tool</title>
     </head>
     <body>
-        <button class="btn">Удалить DNS</button>
-        <script src="./js/main.js"></script>
+        <section class="main">
+            <div class="main__wrapper">
+                <p>Список заданий:</p>
+                <div class="main__list">
+                    <!-- <div class="main__item">subdomain 1</div> -->
+                </div>
+
+                <div class="main__form">
+                    <div class="main__field">
+                        <input
+                            type="text"
+                            placeholder="Поддомен"
+                            name="subdomain" />
+                    </div>
+                    <div class="main__field">
+                        <textarea
+                            name="emails"
+                            placeholder="Список эмейлов"
+                            id="emails"
+                            cols="30"
+                            rows="5"></textarea>
+                    </div>
+                    <div class="main__field">
+                        <button class="main__button button__add">
+                            Добавить
+                        </button>
+                        <button class="main__button button__clear">
+                            Очистить список
+                        </button>
+                    </div>
+                </div>
+
+                <div class="main__field">
+                    <button class="btn">Начать удаление</button>
+                </div>
+            </div>
+        </section>
+
+        <script src="./js/script.js"></script>
     </body>
 </html>
