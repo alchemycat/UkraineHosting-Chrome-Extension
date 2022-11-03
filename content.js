@@ -116,7 +116,6 @@ window.onload = () => {
             let table = document
                 .querySelector(selector)
                 .querySelector('.table');
-            console.log(table);
             let id = setInterval(() => {
                 if (table) {
                     clearInterval(id);

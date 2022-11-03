@@ -1,5 +1,6 @@
 window.onload = () => {
     //значения хранилища
+
     async function init() {
         //Константы
         const { accountid } = await getStorageData('accountid');
@@ -8,9 +9,12 @@ window.onload = () => {
 
         const btn = document.querySelector('.btn__start');
 
-        if (!Array.isArray(tasks)) {
+        if (!Array.isArray(tasks) || !tasks.length) {
+            const caption = document.querySelector('.caption');
+
             chrome.storage.local.set({ tasks: [] });
             btn.setAttribute('disabled', true);
+            caption.classList.add('hidden');
         } else {
             //Добавляем задания в список
             if (status) {
@@ -18,8 +22,34 @@ window.onload = () => {
                     btn.removeAttribute('disabled', true);
                 }
             }
+            const caption = document.querySelector('.caption');
+            if (caption.classList.contains('hidden')) {
+                caption.classList.remove('hidden');
+            }
             addItems(tasks);
         }
+        //
+
+        //Слушаем сообщения
+        chrome.runtime.onMessage.addListener(async (request) => {
+            if (request.type === 'complete') {
+                const caption = document.querySelector('.caption');
+                let { tasks } = await getStorageData('tasks');
+
+                addItems(tasks);
+
+                if (tasks.length === 0) {
+                    if (!caption.classList.contains('hidden')) {
+                        caption.classList.add('hidden');
+                    }
+                } else {
+                    if (caption.classList.contains('hidden')) {
+                        caption.classList.remove('hidden');
+                    }
+                }
+            }
+        });
+
         //
 
         const accountIdInput = document.querySelector('[name="accountid"]');
@@ -100,6 +130,13 @@ window.onload = () => {
                 chrome.storage.local.set({
                     tasks,
                 });
+
+                const caption = document.querySelector('.caption');
+
+                if (caption.classList.contains('hidden')) {
+                    caption.classList.remove('hidden');
+                }
+
                 addItems(tasks);
                 subdomain.value = '';
                 emailsInput.value = '';
