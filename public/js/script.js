@@ -163,7 +163,7 @@ window.onload = () => {
                 domainId.value = '';
                 emailsInput.value = '';
 
-                chrome.storage.local.remove('tempdomainid');
+                chrome.storage.local.remove('tempdomainId');
                 chrome.storage.local.remove('tempemails');
             }
         });
