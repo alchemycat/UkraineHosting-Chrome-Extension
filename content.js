@@ -26,36 +26,20 @@ window.onload = () => {
                     await searchTable('#boxes_list');
                     //передаем список эмейлов из первого массива (после выполнения задания, первый элемент массива будет удален)
                     await removeEmails(tasks[0].emails);
+                    const domainId = tasks[0].domainId;
+                    console.log(tasks[0]);
+                    console.log(domainId);
                     // alert('email complete');
                     //запускаем поиск url для удаления DNS
                     chrome.runtime.sendMessage({
-                        type: 'findurl',
-                        url: 'https://adm.tools/domains/',
+                        type: 'removedns',
+                        url: `https://adm.tools/Domains/${domainId}/Manage/Records/`,
                     });
-                } else if (status.task === 'findurl') {
-                    // alert('find url start');
-                    if (pageURL === 'https://adm.tools/domains/') {
-                        try {
-                            await searchTable('#content_domain');
-                            //парсим домен из поддомена и передаем в функцию которая найдет ID домена и создаст URL
-                            const domain =
-                                tasks[0].subdomain.match(/(?<=\.).*/)[0];
-                            let url = await findDomainID(domain);
-                            // alert(`URL finded: ${url}`);
-                            chrome.runtime.sendMessage({
-                                type: 'removedns',
-                                url,
-                            });
-                        } catch (err) {
-                            console.log(err);
-                            chrome.runtime.sendMessage({ type: 'stop' });
-                        }
-                    }
                 } else if (status.task === 'removedns') {
                     // alert('dns start');
                     await searchTable('#domain_records_list');
                     //передаем поддомен в функцию для удаления DNS записей
-                    await removeDNSRecords(tasks[0].subdomain);
+                    await removeDNSRecords(tasks[0].emails);
                     // alert('dns complete');
                     chrome.runtime.sendMessage({
                         type: 'removesite',
@@ -66,7 +50,7 @@ window.onload = () => {
                     // alert('site start');
                     await searchTable('#virtual_list');
                     //передаем поддомен в функцию которая удалит сайты
-                    await removeSites(tasks[0].subdomain);
+                    await removeSites(tasks[0].emails);
                     // alert('site removed');
                     console.log('Завершаю работу');
                     chrome.runtime.sendMessage({ type: 'stop' });
@@ -77,7 +61,11 @@ window.onload = () => {
         }
     }
 
-    async function removeSites(domain) {
+    async function removeSites(emails) {
+        let subdomains = [];
+
+        subdomains = emails.map((email) => email.match(/(?<=@).*/gm)[0]);
+
         const sites = document.querySelectorAll('.c-site-item');
         // const storage = await getStorageData('status');
         // console.log(storage);
@@ -85,7 +73,7 @@ window.onload = () => {
             for (let site of sites) {
                 let name = site.querySelector('.c-site-item__site-name');
                 name = name.textContent.trim();
-                if (name.includes(domain)) {
+                if (subdomains.includes(name)) {
                     console.log('ищу нужный домен');
                     //Жмём удалить site
 
@@ -236,32 +224,6 @@ window.onload = () => {
         });
     }
 
-    //функция поиска ID домена
-    async function findDomainID(domain) {
-        return new Promise((resolve) => {
-            let url;
-
-            let links = document.querySelectorAll(
-                '[onclick*="domain_delete_fake"]'
-            );
-
-            for (let link of links) {
-                if (link.getAttribute('onclick').includes(domain)) {
-                    //поиск ID домена
-                    let urlID = link
-                        .getAttribute('onclick')
-                        .match(/(?<=\(\')\d+(?=')/gm)[0];
-
-                    //находим id домена и загружаем страницу
-                    url = `https://adm.tools/Domains/${urlID}/Manage/Records/`;
-                    break;
-                }
-            }
-
-            resolve(url);
-        });
-    }
-
     //Функція дістає дані з chrome.storage
     function getStorageData(sKey) {
         return new Promise(function (resolve, reject) {
@@ -278,12 +240,16 @@ window.onload = () => {
         });
     }
 
-    async function removeDNSRecords(subdomain) {
+    async function removeDNSRecords(emails) {
+        let subdomains = [];
+
+        subdomains = emails.map((email) => email.match(/(?<=@).*/gm)[0]);
+
+        console.log(subdomains);
+
         let btns = document.querySelectorAll(
             '[onclick*="return domain_record_delete"]'
         );
-
-        console.log(btns);
 
         for (let btn of btns) {
             let btnData = btn
@@ -292,8 +258,8 @@ window.onload = () => {
                 .replaceAll(/<[^>]*>/gm, '');
 
             //проверяем содержит ли значение кнопки нужный поддомен, если содержит нужно нажать на кнопку и удалить эту DNS
-            if (btnData.includes(subdomain)) {
-                console.log('btn includes subdomain');
+            if (subdomains.includes(btnData)) {
+                console.log('subdomains includes btn');
                 await btn.click();
                 console.log(btn);
                 await sleep(200);

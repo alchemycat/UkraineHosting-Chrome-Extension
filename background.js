@@ -8,15 +8,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender) {
         });
 
         loadPage(request.url);
-    } else if (request.type === 'findurl') {
-        chrome.storage.local.set({
-            status: {
-                task: 'findurl',
-                process: true,
-            },
-        });
-
-        loadPage(request.url);
     } else if (request.type === 'removedns') {
         chrome.storage.local.set({
             status: {

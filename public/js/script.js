@@ -49,7 +49,7 @@ window.onload = () => {
             tasks.forEach((task, i) => {
                 const item = document.createElement('div');
                 item.classList.add('main__item');
-                item.textContent = `${i + 1}. ${task.subdomain}`;
+                item.textContent = `${i + 1}. ${task.domainId}`;
                 list.append(item);
             });
         }
@@ -82,7 +82,7 @@ window.onload = () => {
 
         mainBtn.addEventListener('click', async () => {
             const btnStart = document.querySelector('.btn__start');
-            const subdomain = document.querySelector('[name="subdomain"]');
+            const domainId = document.querySelector('[name="domainid"]');
             const emailsInput = document.querySelector('[name="emails"]');
 
             let { tasks } = await getStorageData('tasks');
@@ -95,16 +95,15 @@ window.onload = () => {
                 tasks = [];
             }
 
-            let subdomainError =
-                subdomain.parentElement.querySelector('.error');
+            let domainIdError = domainId.parentElement.querySelector('.error');
 
-            if (!subdomainError.classList.contains('hidden')) {
-                subdomainError.classList.add('hidden');
+            if (!domainIdError.classList.contains('hidden')) {
+                domainIdError.classList.add('hidden');
             }
 
-            if (!subdomain.value) {
-                subdomainError.classList.remove('hidden');
-                errors.push('subdomain');
+            if (!domainId.value) {
+                domainIdError.classList.remove('hidden');
+                errors.push('domainId');
             }
 
             let emailError = emailsInput.parentElement.querySelector('.error');
@@ -121,7 +120,7 @@ window.onload = () => {
             if (errors.length > 0) {
                 return;
             } else {
-                tasks.push({ subdomain: subdomain.value, emails });
+                tasks.push({ domainId: domainId.value, emails });
 
                 chrome.storage.local.set({
                     tasks,
@@ -139,7 +138,7 @@ window.onload = () => {
                     btn.removeAttribute('disabled');
                 }
 
-                subdomain.value = '';
+                domainId.value = '';
                 emailsInput.value = '';
             }
         });
