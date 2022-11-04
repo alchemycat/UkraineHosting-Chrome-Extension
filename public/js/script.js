@@ -2,6 +2,28 @@ window.onload = () => {
     //значения хранилища
 
     async function init() {
+        const domainId = document.querySelector('[name="domainid"]');
+        const emailsInput = document.querySelector('[name="emails"]');
+
+        domainId.addEventListener('input', () => {
+            chrome.storage.local.set({ tempdomainId: domainId.value });
+        });
+
+        emailsInput.addEventListener('input', () => {
+            chrome.storage.local.set({ tempemails: emailsInput.value });
+        });
+
+        const { tempdomainId } = await getStorageData('tempdomainId');
+        const { tempemails } = await getStorageData('tempemails');
+
+        if (tempdomainId) {
+            domainId.value = tempdomainId;
+        }
+
+        if (tempemails) {
+            emailsInput.value = tempemails;
+        }
+
         //Константы
         const { accountid } = await getStorageData('accountid');
         let { tasks } = await getStorageData('tasks');
@@ -140,6 +162,9 @@ window.onload = () => {
 
                 domainId.value = '';
                 emailsInput.value = '';
+
+                chrome.storage.local.remove('tempdomainid');
+                chrome.storage.local.remove('tempemails');
             }
         });
 
