@@ -3,8 +3,6 @@ window.onload = () => {
         //Константы
         const { accountid } = await getStorageData('accountid');
         const { tasks } = await getStorageData('tasks');
-        //Проверка статуса задачи и url
-        let pageURL = window.location.href;
 
         //Получение статуса задачи и текущей задачи
         let { status } = await getStorageData('status');
@@ -73,6 +71,8 @@ window.onload = () => {
             for (let site of sites) {
                 let name = site.querySelector('.c-site-item__site-name');
                 name = name.textContent.trim();
+                name = name.replace(/^www\./, '');
+                console.log(name);
                 if (subdomains.includes(name)) {
                     console.log('ищу нужный домен');
                     //Жмём удалить site

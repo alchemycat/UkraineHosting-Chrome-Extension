@@ -7,7 +7,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender) {
             },
         });
 
-        loadPage(request.url);
+        chrome.tabs.create({
+            url: request.url,
+        });
     } else if (request.type === 'removedns') {
         chrome.storage.local.set({
             status: {
