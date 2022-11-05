@@ -18,27 +18,53 @@ window.onload = () => {
                 }
 
                 if (status.task === 'removeemail') {
-                    //логика для emails
-                    await findTable('#boxes_list');
-                    //передаем список эмейлов из первого массива (после выполнения задания, первый элемент массива будет удален)
-                    await removeEmails(tasks[0].emails);
                     const domainId = tasks[0].domainId;
-                    //запускаем поиск url для удаления DNS
-                    chrome.runtime.sendMessage({
-                        type: 'removedns',
-                        url: `https://adm.tools/Domains/${domainId}/Manage/Records/`,
-                    });
+                    try {
+                        //логика для emails
+                        await findTable('#boxes_list');
+                        //передаем список эмейлов из первого массива (после выполнения задания, первый элемент массива будет удален)
+                        await removeEmails(tasks[0].emails);
+                        //запускаем поиск url для удаления DNS
+                        chrome.runtime.sendMessage({
+                            type: 'removedns',
+                            url: `https://adm.tools/Domains/${domainId}/Manage/Records/`,
+                        });
+                    } catch (err) {
+                        alert(`Ошибка удаления эмейлов: ${err.message}`);
+                        //переходим к следующей задаче
+                        chrome.runtime.sendMessage({
+                            type: 'removedns',
+                            url: `https://adm.tools/Domains/${domainId}/Manage/Records/`,
+                        });
+                    }
                 } else if (status.task === 'removedns') {
-                    await findTable('#domain_records_list');
-                    //передаем эмейлы в функцию для удаления DNS записей
-                    await removeDNSRecords(tasks[0].emails);
-                    chrome.runtime.sendMessage({
-                        type: 'removesite',
-                        url: `https://adm.tools/hosting/account/${accountid}/virtual/`,
-                    });
+                    try {
+                        await findTable('#domain_records_list');
+                        //передаем эмейлы в функцию для удаления DNS записей
+
+                        await removeDNSRecords(tasks[0].emails);
+                        chrome.runtime.sendMessage({
+                            type: 'removesite',
+                            url: `https://adm.tools/hosting/account/${accountid}/virtual/`,
+                        });
+                    } catch (err) {
+                        alert(`Ошибка удаления DNS: ${err.message}`);
+
+                        //Переходим к следующей задаче
+                        chrome.runtime.sendMessage({
+                            type: 'removesite',
+                            url: `https://adm.tools/hosting/account/${accountid}/virtual/`,
+                        });
+                    }
                 } else if (status.task === 'removesite') {
                     //логика для сайта
-                    await sites();
+                    try {
+                        await sites();
+                    } catch (err) {
+                        alert(`Ошибка удаления сайтов: ${err}`);
+                        chrome.runtime.sendMessage({ type: 'stop' });
+                        alert(`Расширение остановлено`);
+                    }
                 }
             } else {
                 console.log('Задача не активна');
@@ -70,12 +96,12 @@ window.onload = () => {
 
                 await sites();
             } else {
-                console.log('Завершаю работу');
                 chrome.runtime.sendMessage({ type: 'stop' });
+                alert(`Расширение завершило работу`);
             }
         } else {
-            console.log('Завершаю работу');
             chrome.runtime.sendMessage({ type: 'stop' });
+            alert(`Расширение завершило работу`);
         }
     }
 
