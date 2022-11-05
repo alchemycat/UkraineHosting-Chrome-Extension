@@ -42,23 +42,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender) {
             },
         });
 
-        console.log(tasks);
-
-        let { status } = await getStorageData('status');
-        console.log(status);
-
         if (tasks.length > 0) {
             tasks = tasks.splice(1);
-            console.log(tasks);
             chrome.storage.local.set({ tasks });
         }
-    }
-
-    function loadPage(url) {
-        //load page for
-        chrome.tabs.query({ active: true }, (tabs) => {
-            chrome.tabs.update(tabs[0].id, { url });
-        });
     }
 
     function getStorageData(sKey) {

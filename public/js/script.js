@@ -1,6 +1,4 @@
 window.onload = () => {
-    //значения хранилища
-
     async function init() {
         const domainId = document.querySelector('[name="domainid"]');
         const emailsInput = document.querySelector('[name="emails"]');
@@ -29,20 +27,22 @@ window.onload = () => {
         let { tasks } = await getStorageData('tasks');
         const { status } = await getStorageData('status');
 
-        const btn = document.querySelector('.btn__start');
+        const btnStart = document.querySelector('.button__start');
+        const btnStop = document.querySelector('.button__stop');
 
         if (!Array.isArray(tasks) || !tasks.length) {
             const caption = document.querySelector('.caption');
 
             chrome.storage.local.set({ tasks: [] });
-            btn.setAttribute('disabled', true);
+            btnStart.setAttribute('disabled', true);
+            btnStop.setAttribute('disabled', true);
             caption.classList.add('hidden');
         } else {
             //Добавляем задания в список
             console.log(status);
             if (status) {
                 if (!status.process) {
-                    btn.removeAttribute('disabled', true);
+                    btnStart.removeAttribute('disabled', true);
                 }
             }
             const caption = document.querySelector('.caption');
@@ -51,8 +51,8 @@ window.onload = () => {
             }
             addItems(tasks);
         }
-        //
 
+        //Установка значения accountid в поле input
         const accountIdInput = document.querySelector('[name="accountid"]');
 
         if (accountid) {
@@ -63,6 +63,7 @@ window.onload = () => {
             chrome.storage.local.set({ accountid: accountIdInput.value });
         });
 
+        //Функция которая добавляет задания в список
         function addItems(tasks) {
             const list = document.querySelector('.main__list');
 
@@ -76,12 +77,13 @@ window.onload = () => {
             });
         }
 
-        const clearBtn = document.querySelector('.button__clear');
+        //Удаление заданий
+        const btnClear = document.querySelector('.button__clear');
 
-        clearBtn.addEventListener('click', async () => {
+        btnClear.addEventListener('click', async () => {
             const caption = document.querySelector('.caption');
             const list = document.querySelector('.main__list');
-            const btnStart = document.querySelector('.btn__start');
+            const btnStart = document.querySelector('.button__start');
 
             if (!caption.classList.contains('hidden')) {
                 caption.classList.add('hidden');
@@ -101,10 +103,11 @@ window.onload = () => {
             }
         });
 
-        const mainBtn = document.querySelector('.button__add');
+        //Добавление заданий
+        const btnAdd = document.querySelector('.button__add');
 
-        mainBtn.addEventListener('click', async () => {
-            const btnStart = document.querySelector('.btn__start');
+        btnAdd.addEventListener('click', async () => {
+            const btnStart = document.querySelector('.button__start');
             const domainId = document.querySelector('[name="domainid"]');
             const emailsInput = document.querySelector('[name="emails"]');
 
@@ -158,7 +161,7 @@ window.onload = () => {
                 addItems(tasks);
 
                 if (btnStart.getAttribute('disabled')) {
-                    btn.removeAttribute('disabled');
+                    btnStart.removeAttribute('disabled');
                 }
 
                 domainId.value = '';
@@ -169,16 +172,25 @@ window.onload = () => {
             }
         });
 
-        btn.addEventListener('click', async () => {
+        //старт выполненения
+        btnStart.addEventListener('click', async () => {
             let { tasks } = await getStorageData('tasks');
 
             if (tasks.length > 0 && accountid) {
-                btn.setAttribute('disabled', true);
+                btnStart.setAttribute('disabled', true);
+                btnStop.removeAttribute('disabled');
+
                 chrome.runtime.sendMessage({
                     type: 'startBG',
                     url: `https://adm.tools/hosting/account/${accountid}/mail/boxes/`,
                 });
             }
+        });
+
+        btnStop.addEventListener('click', () => {
+            chrome.runtime.sendMessage({ type: 'stop' });
+            btnStop.setAttribute('disabled', true);
+            btnStart.removeAttribute('disabled');
         });
 
         function getStorageData(sKey) {

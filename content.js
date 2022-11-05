@@ -67,7 +67,7 @@ window.onload = () => {
                     }
                 }
             } else {
-                console.log('Задача не активна');
+                console.log('Нет активных заданий');
             }
         }
     }

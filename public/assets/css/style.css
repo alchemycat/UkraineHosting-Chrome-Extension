@@ -12,8 +12,14 @@
     margin-top: 10px;
 }
 
-.button__add {
+.button__add,
+.button__start {
     margin-right: 10px;
+}
+
+.button__start,
+.button__stop {
+    width: 49%;
 }
 
 .caption {
@@ -47,10 +53,6 @@ textarea {
 
 textarea::placeholder {
     font-size: 14px;
-}
-
-.btn__start {
-    width: 100%;
 }
 
 .hidden {
