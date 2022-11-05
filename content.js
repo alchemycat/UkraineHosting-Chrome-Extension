@@ -21,7 +21,13 @@ window.onload = () => {
                     const domainId = tasks[0].domainId;
                     try {
                         //логика для emails
-                        await findTable('#boxes_list');
+                        const isExist = await findTable('#boxes_list');
+                        if (!isExist) {
+                            chrome.runtime.sendMessage({
+                                type: 'removedns',
+                                url: `https://adm.tools/Domains/${domainId}/Manage/Records/`,
+                            });
+                        }
                         //передаем список эмейлов из первого массива (после выполнения задания, первый элемент массива будет удален)
                         await removeEmails(tasks[0].emails);
                         //запускаем поиск url для удаления DNS
@@ -39,9 +45,14 @@ window.onload = () => {
                     }
                 } else if (status.task === 'removedns') {
                     try {
-                        await findTable('#domain_records_list');
+                        const isExist = await findTable('#domain_records_list');
                         //передаем эмейлы в функцию для удаления DNS записей
-
+                        if (!isExist) {
+                            chrome.runtime.sendMessage({
+                                type: 'removesite',
+                                url: `https://adm.tools/hosting/account/${accountid}/virtual/`,
+                            });
+                        }
                         await removeDNSRecords(tasks[0].emails);
                         chrome.runtime.sendMessage({
                             type: 'removesite',
@@ -73,8 +84,14 @@ window.onload = () => {
     }
 
     async function sites() {
-        await findTable('#virtual_list');
+        const isExist = await findTable('#virtual_list');
         //передаем поддомен в функцию которая удалит сайты
+        if (!isExist) {
+            chrome.runtime.sendMessage({ type: 'stop' });
+            alert(`Выполнение завершено`);
+            return;
+        }
+
         await removeSites();
 
         const pagination = document.querySelector('.pagination');
@@ -97,11 +114,11 @@ window.onload = () => {
                 await sites();
             } else {
                 chrome.runtime.sendMessage({ type: 'stop' });
-                alert(`Расширение завершило работу`);
+                alert(`Выполнение завершено`);
             }
         } else {
             chrome.runtime.sendMessage({ type: 'stop' });
-            alert(`Расширение завершило работу`);
+            alert(`Выполнение завершено`);
         }
     }
 
@@ -225,7 +242,7 @@ window.onload = () => {
     init();
 
     function findTable(selector) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             let counter = 0;
             let table = document
                 .querySelector(selector)
@@ -234,17 +251,18 @@ window.onload = () => {
                 if (table) {
                     clearInterval(id);
 
-                    resolve();
+                    resolve(true);
                 } else {
                     console.log('поиск таблицы');
                     table = document
                         .querySelector(selector)
                         .querySelector('.table');
                     counter++;
-                    if (counter > 100) {
+                    if (counter > 50) {
                         clearInterval(id);
                         console.log('Не удалось найти элемент на странице');
-                        chrome.runtime.sendMessage({ type: 'stop' });
+                        resolve(false);
+                        // chrome.runtime.sendMessage({ type: 'stop' });
                     }
                 }
             }, 100);
@@ -263,7 +281,7 @@ window.onload = () => {
                 } else {
                     element = document.querySelector(selector);
                     counter++;
-                    if (counter > 100) {
+                    if (counter > 50) {
                         clearInterval(id);
                         chrome.runtime.sendMessage({ type: 'stop' });
                     }
@@ -286,7 +304,7 @@ window.onload = () => {
                     element = document.querySelector('#ajaxPreloader');
 
                     counter++;
-                    if (counter > 100) {
+                    if (counter > 50) {
                         clearInterval(id);
                         chrome.runtime.sendMessage({ type: 'stop' });
                     }

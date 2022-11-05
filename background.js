@@ -18,9 +18,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender) {
             },
         });
 
-        chrome.tabs.create({
-            url: request.url,
-        });
+        chrome.tabs.update(sender.tab.id, { url: request.url });
+
+        // chrome.tabs.create({
+        //     url: request.url,
+        // });
     } else if (request.type === 'removesite') {
         chrome.storage.local.set({
             status: {
@@ -29,9 +31,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender) {
             },
         });
 
-        chrome.tabs.create({
-            url: request.url,
-        });
+        chrome.tabs.update(sender.tab.id, { url: request.url });
+
+        // chrome.tabs.create({
+        //     url: request.url,
+        // });
     } else if (request.type === 'stop') {
         let { tasks } = await getStorageData('tasks');
 
