@@ -4,6 +4,8 @@ window.onload = () => {
         const { accountid } = await getStorageData('accountid');
         const { tasks } = await getStorageData('tasks');
 
+        let lastPage;
+
         //Получение статуса задачи и текущей задачи
         let { status } = await getStorageData('status');
 
@@ -45,13 +47,7 @@ window.onload = () => {
                     });
                     //логика для сайта
                 } else if (status.task === 'removesite') {
-                    // alert('site start');
-                    await searchTable('#virtual_list');
-                    //передаем поддомен в функцию которая удалит сайты
-                    await removeSites(tasks[0].emails);
-                    // alert('site removed');
-                    console.log('Завершаю работу');
-                    chrome.runtime.sendMessage({ type: 'stop' });
+                    await sites();
                 }
             } else {
                 console.log('Задача не активна');
@@ -59,9 +55,56 @@ window.onload = () => {
         }
     }
 
-    async function removeSites(emails) {
-        let subdomains = [];
+    async function sites() {
+        // alert('site start');
+        await searchTable('#virtual_list');
+        //передаем поддомен в функцию которая удалит сайты
+        await removeSites();
+        // alert('site removed');
 
+        const pagination = document.querySelector('.pagination');
+
+        if (pagination) {
+            let active = pagination.querySelector('.active');
+            lastPage = active.textContent;
+            const next = active.nextElementSibling;
+
+            if (
+                next &&
+                next.classList.contains('item') &&
+                next.tagName === 'A'
+            ) {
+                console.log('Открываю следующую страницу');
+                await next.click();
+                await sleep(5000);
+                console.log('Перезапускаю функцию для удаления сайтов');
+                await waitLoading();
+
+                let currentPage =
+                    pagination.querySelector('.active').textContent;
+
+                console.log(
+                    `Предыдущая открытая страница: ${lastPage}\nТекущая открытая страница: ${currentPage}`
+                );
+
+                // if (lastPage != currentPage) {
+                await sites();
+                // }
+            } else {
+                console.log('Завершаю работу');
+                chrome.runtime.sendMessage({ type: 'stop' });
+            }
+        } else {
+            console.log('Завершаю работу');
+            chrome.runtime.sendMessage({ type: 'stop' });
+        }
+    }
+
+    async function removeSites() {
+        let taskData = await getStorageData('tasks');
+        let emails = taskData.tasks[0].emails;
+        console.log(emails);
+        let subdomains = [];
         subdomains = emails.map((email) => email.match(/(?<=@).*/gm)[0]);
 
         const sites = document.querySelectorAll('.c-site-item');
@@ -72,11 +115,11 @@ window.onload = () => {
                 let name = site.querySelector('.c-site-item__site-name');
                 name = name.textContent.trim();
                 name = name.replace(/^www\./, '');
-                console.log(name);
+                // console.log(name);
                 if (subdomains.includes(name)) {
                     console.log('ищу нужный домен');
                     //Жмём удалить site
-
+                    console.log(`удаляю сайт ${name}`);
                     const btn = site.querySelector('.c-site-item__delete');
                     await btn.click();
                     await sleep(200);
@@ -89,7 +132,8 @@ window.onload = () => {
                     await deleteBtn.click();
                     await sleep(500);
                     //Проверяем закрылось ли модальное окно подтверждения удаления
-                    // await isClosed('#confirm_modal');
+                    await isClosed('.dimmer');
+                    await sleep(300);
                     // console.log(`site founded: ${btn}`);
                 }
             }
@@ -199,6 +243,22 @@ window.onload = () => {
         });
     }
 
+    function waitLoading() {
+        return new Promise((resolve) => {
+            let element = document.querySelector('#ajaxPreloader');
+
+            let id = setInterval(() => {
+                if (!element.classList.contains('c-loader')) {
+                    clearInterval(id);
+                    resolve();
+                } else {
+                    console.log('Ожидаю загрузку страницы');
+                    element = document.querySelector('#ajaxPreloader');
+                }
+            }, 100);
+        });
+    }
+
     function isClosed(selector) {
         // #confirm_modal
         //проверяем закрылось ли модальное окно подтверждения удаления записи
@@ -256,6 +316,16 @@ window.onload = () => {
                 .getAttribute('onclick')
                 .match(/(?<=')\S+(?='\))/gm)[0]
                 .replaceAll(/<[^>]*>/gm, '');
+
+            try {
+                if (/dmarc/.test(btnData)) {
+                    btnData = btnData.match(/(?<=dmarc\.)\S+/)[0];
+                } else if (/domainkey/.test(btnData)) {
+                    btnData = btnData.match(/(?<=domainkey\.)\S+/)[0];
+                }
+            } catch (err) {
+                console.log(err);
+            }
 
             //проверяем содержит ли значение кнопки нужный поддомен, если содержит нужно нажать на кнопку и удалить эту DNS
             if (subdomains.includes(btnData)) {

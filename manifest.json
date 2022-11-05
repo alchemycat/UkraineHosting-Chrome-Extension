@@ -1,6 +1,6 @@
 {
     "name": "Ukraine Hosting Tool",
-    "version": "1.0.1",
+    "version": "1.0.5",
     "description": "Tool for Ukraine Hosting",
     "manifest_version": 3,
     "action": {

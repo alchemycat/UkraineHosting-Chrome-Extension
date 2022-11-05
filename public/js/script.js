@@ -88,6 +88,7 @@ window.onload = () => {
             }
 
             chrome.storage.local.remove('tasks');
+            chrome.storage.local.remove('status');
 
             const { tasks } = await getStorageData('tasks');
 
