@@ -4,8 +4,6 @@ window.onload = () => {
         const { accountid } = await getStorageData('accountid');
         const { tasks } = await getStorageData('tasks');
 
-        let lastPage;
-
         //Получение статуса задачи и текущей задачи
         let { status } = await getStorageData('status');
 
@@ -17,36 +15,29 @@ window.onload = () => {
                     );
                     chrome.runtime.sendMessage({ type: 'stop' });
                     return;
-                } else {
-                    // alert(`account id: ${accountid}`);
                 }
+
                 if (status.task === 'removeemail') {
-                    // alert('email start');
                     //логика для emails
-                    await searchTable('#boxes_list');
+                    await findTable('#boxes_list');
                     //передаем список эмейлов из первого массива (после выполнения задания, первый элемент массива будет удален)
                     await removeEmails(tasks[0].emails);
                     const domainId = tasks[0].domainId;
-                    console.log(tasks[0]);
-                    console.log(domainId);
-                    // alert('email complete');
                     //запускаем поиск url для удаления DNS
                     chrome.runtime.sendMessage({
                         type: 'removedns',
                         url: `https://adm.tools/Domains/${domainId}/Manage/Records/`,
                     });
                 } else if (status.task === 'removedns') {
-                    // alert('dns start');
-                    await searchTable('#domain_records_list');
-                    //передаем поддомен в функцию для удаления DNS записей
+                    await findTable('#domain_records_list');
+                    //передаем эмейлы в функцию для удаления DNS записей
                     await removeDNSRecords(tasks[0].emails);
-                    // alert('dns complete');
                     chrome.runtime.sendMessage({
                         type: 'removesite',
                         url: `https://adm.tools/hosting/account/${accountid}/virtual/`,
                     });
-                    //логика для сайта
                 } else if (status.task === 'removesite') {
+                    //логика для сайта
                     await sites();
                 }
             } else {
@@ -56,17 +47,14 @@ window.onload = () => {
     }
 
     async function sites() {
-        // alert('site start');
-        await searchTable('#virtual_list');
+        await findTable('#virtual_list');
         //передаем поддомен в функцию которая удалит сайты
         await removeSites();
-        // alert('site removed');
 
         const pagination = document.querySelector('.pagination');
 
         if (pagination) {
             let active = pagination.querySelector('.active');
-            lastPage = active.textContent;
             const next = active.nextElementSibling;
 
             if (
@@ -80,16 +68,7 @@ window.onload = () => {
                 console.log('Перезапускаю функцию для удаления сайтов');
                 await waitLoading();
 
-                let currentPage =
-                    pagination.querySelector('.active').textContent;
-
-                console.log(
-                    `Предыдущая открытая страница: ${lastPage}\nТекущая открытая страница: ${currentPage}`
-                );
-
-                // if (lastPage != currentPage) {
                 await sites();
-                // }
             } else {
                 console.log('Завершаю работу');
                 chrome.runtime.sendMessage({ type: 'stop' });
@@ -103,21 +82,16 @@ window.onload = () => {
     async function removeSites() {
         let taskData = await getStorageData('tasks');
         let emails = taskData.tasks[0].emails;
-        console.log(emails);
         let subdomains = [];
         subdomains = emails.map((email) => email.match(/(?<=@).*/gm)[0]);
 
         const sites = document.querySelectorAll('.c-site-item');
-        // const storage = await getStorageData('status');
-        // console.log(storage);
         if (sites.length > 0) {
             for (let site of sites) {
                 let name = site.querySelector('.c-site-item__site-name');
                 name = name.textContent.trim();
                 name = name.replace(/^www\./, '');
-                // console.log(name);
                 if (subdomains.includes(name)) {
-                    console.log('ищу нужный домен');
                     //Жмём удалить site
                     console.log(`удаляю сайт ${name}`);
                     const btn = site.querySelector('.c-site-item__delete');
@@ -125,16 +99,13 @@ window.onload = () => {
                     await sleep(200);
                     //Ждем пока появится кнопка подтверждения удаления
                     let deleteBtn = await findElement('#delete_hosts_submit');
-                    // delete_hosts_submit
                     await sleep(300);
-                    console.log('click delete');
                     //Подтверждаем удаление
                     await deleteBtn.click();
                     await sleep(500);
                     //Проверяем закрылось ли модальное окно подтверждения удаления
                     await isClosed('.dimmer');
                     await sleep(300);
-                    // console.log(`site founded: ${btn}`);
                 }
             }
         } else {
@@ -142,7 +113,92 @@ window.onload = () => {
         }
     }
 
-    function searchTable(selector) {
+    async function removeEmails(emails) {
+        //Находим все кнопки для удаления почт
+        let btns = document.querySelectorAll(
+            '[onclick*="MailboxHandler.mailboxDelete"]'
+        );
+
+        //проверяем нашлись ли кнопки
+        if (btns.length) {
+            //начинаем цикл с перебором каждой кнопки
+            for (let btn of btns) {
+                let email;
+
+                email = btn
+                    .getAttribute('onclick')
+                    .match(/(?<=\,\s')\S+\@\S+(?=')/gm)[0];
+                //получаем email для текущей кнопки если он есть
+
+                if (!email) {
+                    //если email не найден тогда пропускаем кнопку
+                    continue;
+                }
+
+                if (emails.includes(email)) {
+                    //Жмём удалить email
+                    await btn.click();
+                    await sleep(300);
+                    //Ждем пока появится кнопка подтверждения удаления
+                    let deleteBtn = await findElement('.submit-btn');
+                    await sleep(300);
+                    //Подтверждаем удаление
+                    await deleteBtn.click();
+                    await sleep(500);
+                    //Проверяем закрылось ли модальное окно подтверждения удаления
+                    await isClosed('#confirm_modal');
+                } else {
+                    continue;
+                }
+                await sleep(300);
+            }
+        }
+    }
+
+    async function removeDNSRecords(emails) {
+        let subdomains = [];
+
+        subdomains = emails.map((email) => email.match(/(?<=@).*/gm)[0]);
+
+        let btns = document.querySelectorAll(
+            '[onclick*="return domain_record_delete"]'
+        );
+
+        for (let btn of btns) {
+            let btnData = btn
+                .getAttribute('onclick')
+                .match(/(?<=')\S+(?='\))/gm)[0]
+                .replaceAll(/<[^>]*>/gm, '');
+
+            try {
+                if (/dmarc/.test(btnData)) {
+                    btnData = btnData.match(/(?<=dmarc\.)\S+/)[0];
+                } else if (/domainkey/.test(btnData)) {
+                    btnData = btnData.match(/(?<=domainkey\.)\S+/)[0];
+                }
+            } catch (err) {
+                console.log(err);
+            }
+
+            //проверяем содержит ли значение кнопки нужный поддомен, если содержит нужно нажать на кнопку и удалить эту DNS
+            if (subdomains.includes(btnData)) {
+                await btn.click();
+                await sleep(200);
+                let deleteBtn = await findElement('.submit-btn');
+                await sleep(300);
+                await deleteBtn.click();
+                await sleep(500);
+                await isClosed('#confirm_modal');
+            } else {
+                continue;
+            }
+            await sleep(300);
+        }
+    }
+
+    init();
+
+    function findTable(selector) {
         return new Promise((resolve) => {
             let counter = 0;
             let table = document
@@ -169,73 +225,20 @@ window.onload = () => {
         });
     }
 
-    async function removeEmails(emails) {
-        //список почт для удаления
-
-        //Находим все кнопки для удаления почт
-        let btns = document.querySelectorAll(
-            '[onclick*="MailboxHandler.mailboxDelete"]'
-        );
-
-        //начинаем цикл с перебором каждой кнопки
-        for (let btn of btns) {
-            let email;
-
-            email = btn
-                .getAttribute('onclick')
-                .match(/(?<=\,\s')\S+\@\S+(?=')/gm)[0];
-            //получаем email для текущей кнопки если он есть
-
-            if (!email) {
-                //если email не найден тогда пропускаем кнопку
-                console.log('continue');
-                continue;
-            }
-
-            if (emails.includes(email)) {
-                //Начинаем удаление
-                console.log(`emails includes email: ${email}`);
-                //Жмём удалить email
-                await btn.click();
-                await sleep(200);
-                //Ждем пока появится кнопка подтверждения удаления
-                let deleteBtn = await findElement('.submit-btn');
-                await sleep(300);
-                console.log('click delete');
-                //Подтверждаем удаление
-                await deleteBtn.click();
-                await sleep(500);
-                //Проверяем закрылось ли модальное окно подтверждения удаления
-                await isClosed('#confirm_modal');
-            } else {
-                console.log('continue');
-                continue;
-            }
-            console.log('sleep 300 ms');
-            await sleep(300);
-            console.log('awake');
-        }
-    }
-
-    init();
-
     function findElement(selector) {
         //поиск элемента на странице
         return new Promise((resolve) => {
             let counter = 0;
             let element = document.querySelector(selector);
-            // console.log(selector);
             let id = setInterval(() => {
                 if (element) {
                     clearInterval(id);
                     resolve(element);
                 } else {
-                    console.log('Ожидаю появление элемента');
                     element = document.querySelector(selector);
                     counter++;
                     if (counter > 100) {
                         clearInterval(id);
-                        console.log('Не удалось найти элемент на странице');
                         chrome.runtime.sendMessage({ type: 'stop' });
                     }
                 }
@@ -243,8 +246,10 @@ window.onload = () => {
         });
     }
 
+    //фукнция которая ждет когда прелоадер прогрузится.
     function waitLoading() {
         return new Promise((resolve) => {
+            let counter = 0;
             let element = document.querySelector('#ajaxPreloader');
 
             let id = setInterval(() => {
@@ -252,27 +257,35 @@ window.onload = () => {
                     clearInterval(id);
                     resolve();
                 } else {
-                    console.log('Ожидаю загрузку страницы');
                     element = document.querySelector('#ajaxPreloader');
+
+                    counter++;
+                    if (counter > 100) {
+                        clearInterval(id);
+                        chrome.runtime.sendMessage({ type: 'stop' });
+                    }
                 }
             }, 100);
         });
     }
 
     function isClosed(selector) {
-        // #confirm_modal
         //проверяем закрылось ли модальное окно подтверждения удаления записи
         return new Promise((resolve) => {
+            let counter = 0;
             let isVisible = document.querySelector(selector);
 
-            let confirmId = setInterval(() => {
+            let id = setInterval(() => {
                 if (isVisible.classList.contains('hidden')) {
-                    clearInterval(confirmId);
-                    console.log('Модальное окно закрыто, можно продолжать');
+                    clearInterval(id);
                     resolve();
                 } else {
-                    console.log('Ожидаю закрытие модального окна');
                     isVisible = document.querySelector(selector);
+                    counter++;
+                    if (counter > 100) {
+                        clearInterval(id);
+                        chrome.runtime.sendMessage({ type: 'stop' });
+                    }
                 }
             });
         }, 100);
@@ -284,7 +297,7 @@ window.onload = () => {
         });
     }
 
-    //Функція дістає дані з chrome.storage
+    //Функция достает данные из chrome storage
     function getStorageData(sKey) {
         return new Promise(function (resolve, reject) {
             chrome.storage.local.get(sKey, function (item) {
@@ -298,55 +311,5 @@ window.onload = () => {
                 }
             });
         });
-    }
-
-    async function removeDNSRecords(emails) {
-        let subdomains = [];
-
-        subdomains = emails.map((email) => email.match(/(?<=@).*/gm)[0]);
-
-        console.log(subdomains);
-
-        let btns = document.querySelectorAll(
-            '[onclick*="return domain_record_delete"]'
-        );
-
-        for (let btn of btns) {
-            let btnData = btn
-                .getAttribute('onclick')
-                .match(/(?<=')\S+(?='\))/gm)[0]
-                .replaceAll(/<[^>]*>/gm, '');
-
-            try {
-                if (/dmarc/.test(btnData)) {
-                    btnData = btnData.match(/(?<=dmarc\.)\S+/)[0];
-                } else if (/domainkey/.test(btnData)) {
-                    btnData = btnData.match(/(?<=domainkey\.)\S+/)[0];
-                }
-            } catch (err) {
-                console.log(err);
-            }
-
-            //проверяем содержит ли значение кнопки нужный поддомен, если содержит нужно нажать на кнопку и удалить эту DNS
-            if (subdomains.includes(btnData)) {
-                console.log('subdomains includes btn');
-                await btn.click();
-                console.log(btn);
-                await sleep(200);
-                let deleteBtn = await findElement('.submit-btn');
-                await sleep(300);
-                console.log('click delete');
-                await deleteBtn.click();
-                await sleep(500);
-                await isClosed('#confirm_modal');
-            } else {
-                console.log('continue');
-                continue;
-            }
-
-            console.log('sleep 300 ms');
-            await sleep(300);
-            console.log('awake');
-        }
     }
 };
