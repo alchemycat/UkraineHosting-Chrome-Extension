@@ -20,7 +20,10 @@ window.onload = () => {
                     alert(
                         'Введите accountId, без него расширение не может работать'
                     );
-                    chrome.runtime.sendMessage({ type: 'stop' });
+                    chrome.runtime.sendMessage({
+                        type: 'stop',
+                        deleteTask: true,
+                    });
                     return;
                 }
 
@@ -80,7 +83,10 @@ window.onload = () => {
                         await sites();
                     } catch (err) {
                         alert(`Ошибка удаления сайтов: ${err}`);
-                        chrome.runtime.sendMessage({ type: 'stop' });
+                        chrome.runtime.sendMessage({
+                            type: 'stop',
+                            deleteTask: true,
+                        });
                         alert(`Расширение остановлено`);
                     }
                 }
@@ -94,7 +100,7 @@ window.onload = () => {
         const isExist = await findTable('#virtual_list');
         //передаем поддомен в функцию которая удалит сайты
         if (!isExist) {
-            chrome.runtime.sendMessage({ type: 'stop' });
+            chrome.runtime.sendMessage({ type: 'stop', deleteTask: true });
             alert(`Выполнение завершено`);
             return;
         }
@@ -118,11 +124,11 @@ window.onload = () => {
 
                 await sites();
             } else {
-                chrome.runtime.sendMessage({ type: 'stop' });
+                chrome.runtime.sendMessage({ type: 'stop', deleteTask: true });
                 alert(`Выполнение завершено`);
             }
         } else {
-            chrome.runtime.sendMessage({ type: 'stop' });
+            chrome.runtime.sendMessage({ type: 'stop', deleteTask: true });
             alert(`Выполнение завершено`);
         }
     }
@@ -304,7 +310,10 @@ window.onload = () => {
                     counter++;
                     if (counter > 50) {
                         clearInterval(id);
-                        chrome.runtime.sendMessage({ type: 'stop' });
+                        chrome.runtime.sendMessage({
+                            type: 'stop',
+                            deleteTask: true,
+                        });
                     }
                 }
             }, 100);
@@ -327,7 +336,10 @@ window.onload = () => {
                     counter++;
                     if (counter > 50) {
                         clearInterval(id);
-                        chrome.runtime.sendMessage({ type: 'stop' });
+                        chrome.runtime.sendMessage({
+                            type: 'stop',
+                            deleteTask: true,
+                        });
                     }
                 }
             }, 100);
@@ -349,7 +361,10 @@ window.onload = () => {
                     counter++;
                     if (counter > 100) {
                         clearInterval(id);
-                        chrome.runtime.sendMessage({ type: 'stop' });
+                        chrome.runtime.sendMessage({
+                            type: 'stop',
+                            deleteTask: true,
+                        });
                     }
                 }
             });

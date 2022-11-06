@@ -46,9 +46,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender) {
             },
         });
 
-        if (tasks.length > 0) {
-            tasks = tasks.splice(1);
-            chrome.storage.local.set({ tasks });
+        if (request.deleteTask) {
+            if (tasks.length > 0) {
+                tasks = tasks.splice(1);
+                chrome.storage.local.set({ tasks });
+            }
         }
     }
 
