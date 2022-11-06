@@ -30,20 +30,33 @@ window.onload = () => {
         const btnStart = document.querySelector('.button__start');
         const btnStop = document.querySelector('.button__stop');
 
+        console.log(status);
+
+        if (status) {
+            if (status.process) {
+                btnStart.setAttribute('disabled', true);
+            } else {
+                btnStop.setAttribute('disabled', true);
+            }
+        }
+
         if (!Array.isArray(tasks) || !tasks.length) {
             const caption = document.querySelector('.caption');
 
             chrome.storage.local.set({ tasks: [] });
+            caption.classList.add('hidden');
             btnStart.setAttribute('disabled', true);
             btnStop.setAttribute('disabled', true);
-            caption.classList.add('hidden');
         } else {
             //Добавляем задания в список
             console.log(status);
             if (status) {
                 if (!status.process) {
                     btnStart.removeAttribute('disabled', true);
+                    btnStop.setAttribute('disabled', true);
                 }
+            } else {
+                btnStop.setAttribute('disabled', true);
             }
             const caption = document.querySelector('.caption');
             if (caption.classList.contains('hidden')) {
