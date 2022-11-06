@@ -105,10 +105,8 @@ window.onload = () => {
                 next.classList.contains('item') &&
                 next.tagName === 'A'
             ) {
-                console.log('Открываю следующую страницу');
                 await next.click();
-                await sleep(5000);
-                console.log('Перезапускаю функцию для удаления сайтов');
+                await sleep(randomInteger(4000, 7000));
                 await waitLoading();
 
                 await sites();
@@ -136,19 +134,18 @@ window.onload = () => {
                 name = name.replace(/^www\./, '');
                 if (subdomains.includes(name)) {
                     //Жмём удалить site
-                    console.log(`удаляю сайт ${name}`);
                     const btn = site.querySelector('.c-site-item__delete');
                     await btn.click();
-                    await sleep(200);
+                    await sleep(randomInteger(500, 800));
                     //Ждем пока появится кнопка подтверждения удаления
                     let deleteBtn = await findElement('#delete_hosts_submit');
-                    await sleep(300);
+                    await sleep(randomInteger(500, 800));
                     //Подтверждаем удаление
                     await deleteBtn.click();
-                    await sleep(500);
+                    await sleep(randomInteger(500, 800));
                     //Проверяем закрылось ли модальное окно подтверждения удаления
                     await isClosed('.dimmer');
-                    await sleep(300);
+                    await sleep(randomInteger(500, 800));
                 }
             }
         } else {
@@ -181,19 +178,19 @@ window.onload = () => {
                 if (emails.includes(email)) {
                     //Жмём удалить email
                     await btn.click();
-                    await sleep(300);
+                    await sleep(randomInteger(500, 800));
                     //Ждем пока появится кнопка подтверждения удаления
                     let deleteBtn = await findElement('.submit-btn');
-                    await sleep(300);
+                    await sleep(randomInteger(500, 800));
                     //Подтверждаем удаление
                     await deleteBtn.click();
-                    await sleep(500);
+                    await sleep(randomInteger(500, 800));
                     //Проверяем закрылось ли модальное окно подтверждения удаления
                     await isClosed('#confirm_modal');
                 } else {
                     continue;
                 }
-                await sleep(300);
+                await sleep(randomInteger(500, 800));
             }
         }
     }
@@ -226,16 +223,16 @@ window.onload = () => {
             //проверяем содержит ли значение кнопки нужный поддомен, если содержит нужно нажать на кнопку и удалить эту DNS
             if (subdomains.includes(btnData)) {
                 await btn.click();
-                await sleep(200);
+                await sleep(randomInteger(500, 800));
                 let deleteBtn = await findElement('.submit-btn');
-                await sleep(300);
+                await sleep(randomInteger(500, 800));
                 await deleteBtn.click();
-                await sleep(500);
+                await sleep(randomInteger(500, 800));
                 await isClosed('#confirm_modal');
             } else {
                 continue;
             }
-            await sleep(300);
+            await sleep(randomInteger(500, 800));
         }
     }
 
@@ -253,14 +250,12 @@ window.onload = () => {
 
                     resolve(true);
                 } else {
-                    console.log('поиск таблицы');
                     table = document
                         .querySelector(selector)
                         .querySelector('.table');
                     counter++;
                     if (counter > 50) {
                         clearInterval(id);
-                        console.log('Не удалось найти элемент на странице');
                         resolve(false);
                         // chrome.runtime.sendMessage({ type: 'stop' });
                     }
@@ -339,6 +334,12 @@ window.onload = () => {
         return new Promise((resolve) => {
             setTimeout(resolve, ms);
         });
+    }
+
+    function randomInteger(min, max) {
+        // получить случайное число от (min-0.5) до (max+0.5)
+        let rand = min - 0.5 + Math.random() * (max - min + 1);
+        return Math.round(rand);
     }
 
     //Функция достает данные из chrome storage
