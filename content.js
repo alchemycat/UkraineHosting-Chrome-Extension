@@ -146,6 +146,25 @@ window.onload = () => {
                     //Проверяем закрылось ли модальное окно подтверждения удаления
                     await isClosed('.dimmer');
                     await sleep(randomInteger(500, 800));
+
+                    //полное удаление
+                    let sitesList = document.querySelectorAll(
+                        '[onclick*="return delete_domain_and_mailboxes"]'
+                    );
+
+                    for (let s of sitesList) {
+                        let attrValue = s.getAttribute('onclick');
+                        if (attrValue.includes(name)) {
+                            //подтверждаем удаление
+                            s.click();
+                            await sleep(randomInteger(500, 800));
+                            let deleteBtn = await findElement('.submit-btn');
+                            await sleep(randomInteger(500, 800));
+                            await deleteBtn.click();
+                            await sleep(randomInteger(500, 800));
+                            await isClosed('#confirm_modal');
+                        }
+                    }
                 }
             }
         } else {
