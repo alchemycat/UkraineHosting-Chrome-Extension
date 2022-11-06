@@ -7,6 +7,13 @@ window.onload = () => {
         //Получение статуса задачи и текущей задачи
         let { status } = await getStorageData('status');
 
+        chrome.runtime.onMessage.addListener((request) => {
+            //слушаем сообщение о перезагрузке страницы, требуется чтобы остановить выполнение всех задач
+            if (request.type === 'reload') {
+                location.reload();
+            }
+        });
+
         if (status) {
             if (status.process) {
                 if (!accountid) {
