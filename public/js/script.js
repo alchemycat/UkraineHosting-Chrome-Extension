@@ -188,8 +188,8 @@ window.onload = () => {
         });
 
         btnStop.addEventListener('click', () => {
-            chrome.runtime.sendMessage({ type: 'stop', deleteTask: false });
-            chrome.runtime.sendMessage({ type: 'reload' });
+            chrome.runtime.sendMessage({ type: 'stop' });
+
             btnStop.setAttribute('disabled', true);
             btnStart.removeAttribute('disabled');
         });

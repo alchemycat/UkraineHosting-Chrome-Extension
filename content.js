@@ -7,13 +7,6 @@ window.onload = () => {
         //Получение статуса задачи и текущей задачи
         let { status } = await getStorageData('status');
 
-        chrome.runtime.onMessage.addListener((request) => {
-            //слушаем сообщение о перезагрузке страницы, требуется чтобы остановить выполнение всех задач
-            if (request.type === 'reload') {
-                location.reload();
-            }
-        });
-
         if (status) {
             if (status.process) {
                 if (!accountid) {
@@ -21,8 +14,7 @@ window.onload = () => {
                         'Введите accountId, без него расширение не может работать'
                     );
                     chrome.runtime.sendMessage({
-                        type: 'stop',
-                        deleteTask: true,
+                        type: 'complete',
                     });
                     return;
                 }
@@ -84,8 +76,7 @@ window.onload = () => {
                     } catch (err) {
                         alert(`Ошибка удаления сайтов: ${err}`);
                         chrome.runtime.sendMessage({
-                            type: 'stop',
-                            deleteTask: true,
+                            type: 'complete',
                         });
                         alert(`Расширение остановлено`);
                     }
@@ -100,7 +91,7 @@ window.onload = () => {
         const isExist = await findTable('#virtual_list');
         //передаем поддомен в функцию которая удалит сайты
         if (!isExist) {
-            chrome.runtime.sendMessage({ type: 'stop', deleteTask: true });
+            chrome.runtime.sendMessage({ type: 'complete' });
             alert(`Выполнение завершено`);
             return;
         }
@@ -124,11 +115,11 @@ window.onload = () => {
 
                 await sites();
             } else {
-                chrome.runtime.sendMessage({ type: 'stop', deleteTask: true });
+                chrome.runtime.sendMessage({ type: 'complete' });
                 alert(`Выполнение завершено`);
             }
         } else {
-            chrome.runtime.sendMessage({ type: 'stop', deleteTask: true });
+            chrome.runtime.sendMessage({ type: 'complete' });
             alert(`Выполнение завершено`);
         }
     }
@@ -289,7 +280,7 @@ window.onload = () => {
                     if (counter > 50) {
                         clearInterval(id);
                         resolve(false);
-                        // chrome.runtime.sendMessage({ type: 'stop' });
+                        // chrome.runtime.sendMessage({ type: 'complete' });
                     }
                 }
             }, 100);
@@ -311,8 +302,7 @@ window.onload = () => {
                     if (counter > 50) {
                         clearInterval(id);
                         chrome.runtime.sendMessage({
-                            type: 'stop',
-                            deleteTask: true,
+                            type: 'complete',
                         });
                     }
                 }
@@ -337,8 +327,7 @@ window.onload = () => {
                     if (counter > 50) {
                         clearInterval(id);
                         chrome.runtime.sendMessage({
-                            type: 'stop',
-                            deleteTask: true,
+                            type: 'complete',
                         });
                     }
                 }
@@ -362,8 +351,7 @@ window.onload = () => {
                     if (counter > 100) {
                         clearInterval(id);
                         chrome.runtime.sendMessage({
-                            type: 'stop',
-                            deleteTask: true,
+                            type: 'complete',
                         });
                     }
                 }

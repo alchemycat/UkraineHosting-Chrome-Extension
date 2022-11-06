@@ -7,9 +7,15 @@ chrome.runtime.onMessage.addListener(async function (request, sender) {
             },
         });
 
-        chrome.tabs.create({
-            url: request.url,
-        });
+        chrome.tabs.create(
+            {
+                url: request.url,
+            },
+            (tab) => {
+                const tabId = tab.id;
+                chrome.storage.local.set({ tabId });
+            }
+        );
     } else if (request.type === 'removedns') {
         chrome.storage.local.set({
             status: {
@@ -19,7 +25,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender) {
         });
 
         chrome.tabs.update(sender.tab.id, { url: request.url });
-
         // chrome.tabs.create({
         //     url: request.url,
         // });
@@ -36,7 +41,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender) {
         // chrome.tabs.create({
         //     url: request.url,
         // });
-    } else if (request.type === 'stop') {
+    } else if (request.type === 'complete') {
+        console.log('Complete');
         let { tasks } = await getStorageData('tasks');
 
         chrome.storage.local.set({
@@ -46,12 +52,19 @@ chrome.runtime.onMessage.addListener(async function (request, sender) {
             },
         });
 
-        if (request.deleteTask) {
-            if (tasks.length > 0) {
-                tasks = tasks.splice(1);
-                chrome.storage.local.set({ tasks });
-            }
+        if (tasks.length > 0) {
+            tasks = tasks.splice(1);
+            chrome.storage.local.set({ tasks });
         }
+    } else if (request.type === 'stop') {
+        const { tabId } = await getStorageData('tabId');
+        chrome.storage.local.set({
+            status: {
+                task: 'stop',
+                process: false,
+            },
+        });
+        chrome.tabs.update(tabId, { url: 'https://adm.tools/hosting/' });
     }
 
     function getStorageData(sKey) {
