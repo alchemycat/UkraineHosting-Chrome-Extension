@@ -135,7 +135,7 @@ window.onload = () => {
             for (let site of sites) {
                 let name = site.querySelector('.c-site-item__site-name');
                 name = name.textContent.trim();
-                name = name.replace(/^www\./, '');
+                name = name.replace(/\w+\./, '');
                 if (subdomains.includes(name)) {
                     //Жмём удалить site
                     const btn = site.querySelector('.c-site-item__delete');
@@ -156,17 +156,21 @@ window.onload = () => {
                         '[onclick*="return delete_domain_and_mailboxes"]'
                     );
 
-                    for (let s of sitesList) {
-                        let attrValue = s.getAttribute('onclick');
-                        if (attrValue.includes(name)) {
-                            //подтверждаем удаление
-                            s.click();
-                            await sleep(randomInteger(500, 800));
-                            let deleteBtn = await findElement('.submit-btn');
-                            await sleep(randomInteger(500, 800));
-                            await deleteBtn.click();
-                            await sleep(randomInteger(500, 800));
-                            await isClosed('#confirm_modal');
+                    if (sitesList.length) {
+                        for (let s of sitesList) {
+                            let attrValue = s.getAttribute('onclick');
+                            if (attrValue.includes(name)) {
+                                //подтверждаем удаление
+                                s.click();
+                                await sleep(randomInteger(500, 800));
+                                let deleteBtn = await findElement(
+                                    '.submit-btn'
+                                );
+                                await sleep(randomInteger(500, 800));
+                                await deleteBtn.click();
+                                await sleep(randomInteger(500, 800));
+                                await isClosed('#confirm_modal');
+                            }
                         }
                     }
                 }
